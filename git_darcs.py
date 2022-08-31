@@ -1,3 +1,4 @@
+from datetime import datetime
 from subprocess import PIPE, CalledProcessError, Popen, run
 
 import click
@@ -19,6 +20,15 @@ def move(rename):
 
 def tag(name):
     run(["darcs", "tag", "--name", name], check=True)
+
+
+def get_tags():
+    res = run(
+        ["darcs", "show", "tags"],
+        check=True,
+        stdout=PIPE,
+    )
+    return res.stdout.decode("UTF-8").strip().splitlines()
 
 
 def message(rev):
@@ -134,14 +144,33 @@ def record_revision(rev):
     record_all(rev)
 
 
+def get_lastest_rev():
+    res = []
+    start = "git-checkpoint "
+    for tag in get_tags():
+        if tag.startswith(start):
+            res.append(tag)
+    if len(res) > 0:
+        _, _, hash = sorted(res)[-1].partition(start)
+        return hash.split(" ")[1]
+    return None
+
+
 @click.command()
 def main():
     """Incremental import of git into darcs."""
-    base = get_base()
-    gen = get_rev_list(get_head(), get_base())
+    base = get_lastest_rev()
+    head = get_head()
+    if base == head:
+        return
+    if base is None:
+        base = get_base()
+    gen = get_rev_list(get_head(), base)
     checkout(base)
     wipe()
     record_all(base)
     for rev in gen:
         record_revision(rev)
-    tag(f"git-checkpoint {rev}")
+    date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+    tag(f"git-checkpoint {date} {rev}")
+    print(get_lastest_rev())
