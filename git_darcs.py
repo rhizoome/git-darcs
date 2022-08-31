@@ -2,11 +2,12 @@ from datetime import datetime
 from subprocess import PIPE, CalledProcessError, Popen, run
 
 import click
+from tqdm import tqdm
 
 
 def wipe():
-    run(["git", "reset"], check=True)
-    run(["git", "clean", "-xdf", "--exclude", "/_darcs"], check=True)
+    run(["git", "reset", "-q"], check=True)
+    run(["git", "clean", "-q", "-xdf", "--exclude", "/_darcs"], check=True)
 
 
 def checkout(rev):
@@ -15,11 +16,11 @@ def checkout(rev):
 
 def move(rename):
     orig, new = rename
-    run(["darcs", "move", orig, new], check=True)
+    run(["darcs", "move", "-q", orig, new], check=True)
 
 
 def tag(name):
-    run(["darcs", "tag", "--name", name], check=True)
+    run(["darcs", "tag", "-q", "--name", name], check=True)
 
 
 def get_tags():
@@ -44,7 +45,15 @@ def record_all(rev):
     msg = message(rev)
     try:
         run(
-            ["darcs", "record", "--look-for-adds", "--no-interactive", "--name", msg],
+            [
+                "darcs",
+                "record",
+                "-q",
+                "--look-for-adds",
+                "--no-interactive",
+                "--name",
+                msg,
+            ],
             check=True,
             stdout=PIPE,
         )
@@ -165,12 +174,16 @@ def main():
         return
     if base is None:
         base = get_base()
+    count = 0
+    for rev in get_rev_list(get_head(), base):
+        count += 1
     gen = get_rev_list(get_head(), base)
     checkout(base)
     wipe()
     record_all(base)
-    for rev in gen:
-        record_revision(rev)
+    with tqdm(total=count) as pbar:
+        for rev in gen:
+            record_revision(rev)
+            pbar.update()
     date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
     tag(f"git-checkpoint {date} {rev}")
-    print(get_lastest_rev())
