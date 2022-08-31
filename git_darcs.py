@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from subprocess import PIPE, CalledProcessError, Popen, run
+from subprocess import DEVNULL, PIPE, CalledProcessError, Popen, run
 
 import click
 from tqdm import tqdm
@@ -17,8 +17,18 @@ def checkout(rev):
 
 def move(rename):
     orig, new = rename
-    Path(new).parent.mkdir(parents=True, exist_ok=True)
+    dir = Path(new).parent
+    dir.mkdir(parents=True, exist_ok=True)
+    add(dir)
     run(["darcs", "move", "-q", orig, new], check=True)
+
+
+def add(path):
+    try:
+        run(["darcs", "add", str(path)], stderr=PIPE, stdout=DEVNULL, check=True)
+    except CalledProcessError as e:
+        if "No files were added" not in e.stderr.decode("UTF-8"):
+            raise
 
 
 def tag(name):
