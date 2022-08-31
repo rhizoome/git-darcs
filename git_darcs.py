@@ -17,7 +17,7 @@ def checkout(rev):
 
 def move(rename):
     orig, new = rename
-    Path(new).parent.mkdir(exist_ok=True)
+    Path(new).parent.mkdir(parents=True, exist_ok=True)
     run(["darcs", "move", "-q", orig, new], check=True)
 
 
