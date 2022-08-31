@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from subprocess import PIPE, CalledProcessError, Popen, run
 
 import click
@@ -16,6 +17,7 @@ def checkout(rev):
 
 def move(rename):
     orig, new = rename
+    Path(new).parent.mkdir(exist_ok=True)
     run(["darcs", "move", "-q", orig, new], check=True)
 
 
@@ -30,6 +32,15 @@ def get_tags():
         stdout=PIPE,
     )
     return res.stdout.decode("UTF-8").strip().splitlines()
+
+
+def get_current_branch():
+    res = run(
+        ["git", "branch", "--show-current"],
+        stdout=PIPE,
+        check=True,
+    )
+    return res.stdout.decode("UTF-8").strip()
 
 
 def message(rev):
@@ -168,22 +179,27 @@ def get_lastest_rev():
 @click.command()
 def main():
     """Incremental import of git into darcs."""
-    base = get_lastest_rev()
-    head = get_head()
-    if base == head:
-        return
-    if base is None:
-        base = get_base()
-    count = 0
-    for rev in get_rev_list(get_head(), base):
-        count += 1
-    gen = get_rev_list(get_head(), base)
-    checkout(base)
-    wipe()
-    record_all(base)
-    with tqdm(total=count) as pbar:
-        for rev in gen:
-            record_revision(rev)
-            pbar.update()
-    date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-    tag(f"git-checkpoint {date} {rev}")
+    branch = get_current_branch()
+    try:
+        base = get_lastest_rev()
+        head = get_head()
+        if base == head:
+            return
+        if base is None:
+            base = get_base()
+        count = 0
+        for rev in get_rev_list(get_head(), base):
+            count += 1
+        gen = get_rev_list(get_head(), base)
+        wipe()
+        checkout(base)
+        record_all(base)
+        with tqdm(total=count) as pbar:
+            for rev in gen:
+                record_revision(rev)
+                pbar.update()
+        date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+        tag(f"git-checkpoint {date} {rev}")
+    finally:
+        if branch:
+            checkout(branch)
