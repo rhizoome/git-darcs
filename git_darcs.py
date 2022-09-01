@@ -18,10 +18,12 @@ def wipe():
 def checkout(rev):
     run(["git", "checkout", rev], check=True, stdout=_devnull, stderr=_devnull)
 
+
 def optimize():
-    run(["darc", "optimize", "clean"], check=True, stdout=_devnull)
-    run(["darc", "optimize", "compress"], check=True, stdout=_devnull)
-    run(["darc", "optimize", "pristine"], check=True, stdout=_devnull)
+    run(["darcs", "optimize", "clean"], check=True, stdout=_devnull)
+    run(["darcs", "optimize", "compress"], check=True, stdout=_devnull)
+    run(["darcs", "optimize", "pristine"], check=True, stdout=_devnull)
+
 
 def move(rename):
     orig, new = rename
@@ -102,23 +104,20 @@ def record_all(rev, postfix=""):
 
 
 def get_rev_list(head, base):
-    try:
-        res = Popen(
-            [
-                "git",
-                "rev-list",
-                "--reverse",
-                "--topo-order",
-                "--ancestry-path",
-                "--no-merges",
-                f"{base}..{head}",
-            ],
-            stdout=PIPE,
-        )
+    with Popen(
+        [
+            "git",
+            "rev-list",
+            "--reverse",
+            "--topo-order",
+            "--ancestry-path",
+            "--no-merges",
+            f"{base}..{head}",
+        ],
+        stdout=PIPE,
+    ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
-    finally:
-        res.wait()
 
 
 def get_base():
@@ -150,15 +149,12 @@ def get_head():
 
 
 def get_rename_diff(rev):
-    try:
-        res = Popen(
-            ["git", "show", "--diff-filter=R", rev],
-            stdout=PIPE,
-        )
+    with Popen(
+        ["git", "show", "--diff-filter=R", rev],
+        stdout=PIPE,
+    ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
-    finally:
-        res.wait()
 
 
 class RenameDiffState:
