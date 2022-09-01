@@ -5,14 +5,19 @@ from subprocess import DEVNULL, PIPE, CalledProcessError, Popen, run
 import click
 from tqdm import tqdm
 
+_verbose = True
+_devnull = DEVNULL
+if _verbose:
+    _devnull = None
+
 
 def wipe():
-    run(["git", "reset", "-q"], check=True)
-    run(["git", "clean", "-q", "-xdf", "--exclude", "/_darcs"], check=True)
+    run(["git", "reset"], check=True, stdout=_devnull)
+    run(["git", "clean", "-xdf", "--exclude", "/_darcs"], check=True, stdout=_devnull)
 
 
 def checkout(rev):
-    run(["git", "checkout", "-q", rev], check=True)
+    run(["git", "checkout", rev], check=True, stdout=_devnull, stderr=_devnull)
 
 
 def move(rename):
@@ -20,19 +25,19 @@ def move(rename):
     dir = Path(new).parent
     dir.mkdir(parents=True, exist_ok=True)
     add(dir)
-    run(["darcs", "move", "-q", orig, new], check=True)
+    run(["darcs", "move", "--case-ok", orig, new], check=True, stdout=_devnull)
 
 
 def add(path):
     try:
-        run(["darcs", "add", str(path)], stderr=PIPE, stdout=DEVNULL, check=True)
+        run(["darcs", "add", str(path)], stderr=PIPE, check=True, stdout=_devnull)
     except CalledProcessError as e:
         if "No files were added" not in e.stderr.decode("UTF-8"):
             raise
 
 
 def tag(name):
-    run(["darcs", "tag", "-q", "--name", name], check=True)
+    run(["darcs", "tag", "--name", name], check=True, stdout=_devnull)
 
 
 def get_tags():
@@ -50,7 +55,10 @@ def get_current_branch():
         stdout=PIPE,
         check=True,
     )
-    return res.stdout.decode("UTF-8").strip()
+    branch = res.stdout.decode("UTF-8").strip()
+    if _verbose:
+        print(branch)
+    return branch
 
 
 def message(rev):
@@ -59,17 +67,19 @@ def message(rev):
         stdout=PIPE,
         check=True,
     )
-    return res.stdout.decode("UTF-8").strip()
+    msg = res.stdout.decode("UTF-8").strip()
+    if _verbose:
+        print(msg)
+    return msg
 
 
 def record_all(rev):
     msg = message(rev)
     try:
-        run(
+        res = run(
             [
                 "darcs",
                 "record",
-                "-q",
                 "--look-for-adds",
                 "--no-interactive",
                 "--name",
@@ -78,6 +88,8 @@ def record_all(rev):
             check=True,
             stdout=PIPE,
         )
+        if _verbose:
+            print(res.stdout.decode("UTF-8").strip())
     except CalledProcessError as e:
         if "No changes!" not in e.stdout.decode("UTF-8"):
             raise
@@ -104,7 +116,7 @@ def get_rev_list(head, base):
 
 
 def get_base():
-    return (
+    base = (
         run(
             [
                 "git",
@@ -118,11 +130,17 @@ def get_base():
         .stdout.strip()
         .decode("UTF-8")
     )
+    if _verbose:
+        print(base)
+    return base
 
 
 def get_head():
     res = run(["git", "rev-parse", "HEAD"], check=True, stdout=PIPE)
-    return res.stdout.strip().decode("UTF-8")
+    head = res.stdout.strip().decode("UTF-8")
+    if _verbose:
+        print(head)
+    return head
 
 
 def get_rename_diff(rev):
@@ -212,4 +230,5 @@ def main():
         tag(f"git-checkpoint {date} {rev}")
     finally:
         if branch:
-            checkout(branch)
+            # checkout(branch)
+            pass
