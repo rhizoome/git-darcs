@@ -238,10 +238,12 @@ def warning():
     "--base",
     "-b",
     default=None,
-    help="First import from (commit-ish, default '--root')",
+    help="First import from (commit-ish)",
 )
 def main(verbose, base, warn):
-    """Incremental import of git into darcs."""
+    """Incremental import of git into darcs.
+
+    By default it imports from the first commit or the last checkpoint."""
     global _verbose
     global _devnull
     if warn:
