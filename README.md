@@ -19,3 +19,20 @@ If your system python isn't 3.10 use:
 `poetry env use $HOME/.pyenv/versions/3.10.5/bin/python3.10`
 
 to set a version installed by pyenv.
+
+usage
+-----
+
+```
+Usage: git-darcs [OPTIONS]
+
+  Incremental import of git into darcs.
+
+  By default it imports from the first commit or the last checkpoint.
+
+Options:
+  -v, --verbose / -nv, --no-verbose
+  -w, --warn / -nw, --no-warn
+  -b, --base TEXT                 First import from (commit-ish)
+  --help                          Show this message and exit.
+```
