@@ -18,6 +18,10 @@ def wipe():
 def checkout(rev):
     run(["git", "checkout", rev], check=True, stdout=_devnull, stderr=_devnull)
 
+def optimize():
+    run(["darc", "optimize", "clean"], check=True, stdout=_devnull)
+    run(["darc", "optimize", "compress"], check=True, stdout=_devnull)
+    run(["darc", "optimize", "pristine"], check=True, stdout=_devnull)
 
 def move(rename):
     orig, new = rename
@@ -222,6 +226,7 @@ def get_lastest_rev():
 def checkpoint(rev):
     date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
     tag(f"git-checkpoint {date} {rev}")
+    optimize()
 
 
 def warning():
