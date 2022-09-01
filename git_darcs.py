@@ -241,12 +241,15 @@ def main(verbose, base):
     branch = get_current_branch()
     try:
         rbase = get_lastest_rev()
-        rhead = get_head()
         if rbase is None:
             if base:
                 rbase = base
             else:
                 rbase = get_base()
+        else:
+            if base:
+                print("Found checkpoint base-option is ignored")
+        rhead = get_head()
         if rbase == rhead:
             return
         count = 0
