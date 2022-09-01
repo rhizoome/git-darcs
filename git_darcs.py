@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, CalledProcessError, Popen, run
@@ -223,18 +224,28 @@ def checkpoint(rev):
     tag(f"git-checkpoint {date} {rev}")
 
 
+def warning():
+    print("Use git-darcs on an extra tracking repository.")
+    print("git-darcs WILL CLEAR ALL YOUR WORK!\n")
+    print("press enter to continue")
+    sys.stdin.readline()
+
+
 @click.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
+@click.option("-w/-nw", "--warn/--no-warn", default=True)
 @click.option(
     "--base",
     "-b",
     default=None,
     help="First import from (commit-ish, default '--root')",
 )
-def main(verbose, base):
+def main(verbose, base, warn):
     """Incremental import of git into darcs."""
     global _verbose
     global _devnull
+    if warn:
+        warning()
     _verbose = _verbose
     if verbose:
         _devnull = None
