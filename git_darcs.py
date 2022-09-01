@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 _verbose = False
 _devnull = DEVNULL
+_disable = None
 
 
 def wipe():
@@ -194,7 +195,7 @@ def record_revision(rev):
         renames += 1
 
     if renames:
-        with tqdm(desc="moves", total=renames, leave=False) as pbar:
+        with tqdm(desc="moves", total=renames, leave=False, disable=_disable) as pbar:
             for rename in get_renames(rev):
                 move(rename)
                 iters += 1
@@ -247,11 +248,13 @@ def main(verbose, base, warn):
     By default it imports from the first commit or the last checkpoint."""
     global _verbose
     global _devnull
+    global _disable
     if warn:
         warning()
-    _verbose = _verbose
+    _verbose = verbose
     if verbose:
         _devnull = None
+        _disable = True
     branch = get_current_branch()
     try:
         rbase = get_lastest_rev()
@@ -275,7 +278,7 @@ def main(verbose, base, warn):
         record_all(rbase)
         last = None
         try:
-            with tqdm(desc="commits", total=count) as pbar:
+            with tqdm(desc="commits", total=count, disable=_disable) as pbar:
                 iters = 0
                 for rev in gen:
                     record_revision(rev)
