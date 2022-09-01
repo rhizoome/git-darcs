@@ -285,5 +285,4 @@ def main(verbose, base, warn):
             checkpoint(last)
     finally:
         if branch:
-            # checkout(branch)
-            pass
+            checkout(branch)
