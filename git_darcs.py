@@ -225,7 +225,13 @@ def checkpoint(rev):
 
 @click.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
-def main(verbose):
+@click.option(
+    "--base",
+    "-b",
+    default=None,
+    help="First import from (commit-ish, default '--root')",
+)
+def main(verbose, base):
     """Incremental import of git into darcs."""
     global _verbose
     global _devnull
@@ -234,19 +240,22 @@ def main(verbose):
         _devnull = None
     branch = get_current_branch()
     try:
-        base = get_lastest_rev()
-        head = get_head()
-        if base == head:
+        rbase = get_lastest_rev()
+        rhead = get_head()
+        if rbase is None:
+            if base:
+                rbase = base
+            else:
+                rbase = get_base()
+        if rbase == rhead:
             return
-        if base is None:
-            base = get_base()
         count = 0
-        for rev in get_rev_list(get_head(), base):
+        for rev in get_rev_list(rhead, rbase):
             count += 1
-        gen = get_rev_list(get_head(), base)
+        gen = get_rev_list(rhead, rbase)
         wipe()
-        checkout(base)
-        record_all(base)
+        checkout(rbase)
+        record_all(rbase)
         last = None
         try:
             with tqdm(desc="commits", total=count) as pbar:
