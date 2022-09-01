@@ -235,7 +235,12 @@ def warning():
 
 @click.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
-@click.option("-w/-nw", "--warn/--no-warn", default=True)
+@click.option(
+    "-w/-nw",
+    "--warn/--no-warn",
+    default=True,
+    help="Warn that repository will be cleaned",
+)
 @click.option(
     "--base",
     "-b",

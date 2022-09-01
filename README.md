@@ -32,7 +32,7 @@ Usage: git-darcs [OPTIONS]
 
 Options:
   -v, --verbose / -nv, --no-verbose
-  -w, --warn / -nw, --no-warn
+  -w, --warn / -nw, --no-warn     Warn that repository will be cleaned
   -b, --base TEXT                 First import from (commit-ish)
   --help                          Show this message and exit.
 ```
