@@ -198,7 +198,7 @@ def record_revision(rev):
                 move(rename)
                 iters += 1
                 if iters % 50 == 0:
-                    record_all(rev, f"move({count:04d})")
+                    record_all(rev, f"move({count:03d})")
                     count += 1
                 pbar.update()
     wipe()
@@ -216,6 +216,11 @@ def get_lastest_rev():
         _, _, hash = sorted(res)[-1].partition(start)
         return hash.split(" ")[1]
     return None
+
+
+def checkpoint(rev):
+    date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+    tag(f"git-checkpoint {date} {rev}")
 
 
 @click.command()
@@ -245,13 +250,16 @@ def main(verbose):
         last = None
         try:
             with tqdm(desc="commits", total=count) as pbar:
+                iters = 0
                 for rev in gen:
                     record_revision(rev)
                     pbar.update()
                     last = rev
+                    iters += 1
+                    if iters % 200 == 0:
+                        checkpoint(last)
         finally:
-            date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-            tag(f"git-checkpoint {date} {last}")
+            checkpoint(last)
     finally:
         if branch:
             # checkout(branch)
