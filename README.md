@@ -14,12 +14,15 @@ change the code to fit better.
 for darcs beginners
 -------------------
 
+You have to read the [darcs book](https://darcsbook.acmelabs.space/), you just
+have to.
+
 Darcs does not handle `chmod` or symbolic-links. The easiest way to workaround
 this, is letting `git` do the work. I have two git/darcs repositories for each
 project.
 
 * `project` (the repository I work in) containing a `.git` and a `_darcs`
-* `project-tracking` (the repository that tracks changes from upstrream`
+* `project-tracking` (the repository that tracks changes from upstrream
    also containing a `.git` and a `_darcs`
 
 I then pull new darcs-patches from `project-tracking` into `project`. Once
