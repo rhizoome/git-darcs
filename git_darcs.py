@@ -5,7 +5,7 @@ from subprocess import DEVNULL, PIPE, CalledProcessError, Popen, run
 import click
 from tqdm import tqdm
 
-_verbose = True
+_verbose = False
 _devnull = DEVNULL
 if _verbose:
     _devnull = None
@@ -73,8 +73,10 @@ def message(rev):
     return msg
 
 
-def record_all(rev):
+def record_all(rev, postfix=""):
     msg = message(rev)
+    if postfix:
+        msg = f"{rev} {postfix}"
     try:
         res = run(
             [
@@ -87,6 +89,7 @@ def record_all(rev):
             ],
             check=True,
             stdout=PIPE,
+            stderr=_devnull,
         )
         if _verbose:
             print(res.stdout.decode("UTF-8").strip())
@@ -185,8 +188,21 @@ def get_renames(rev):
 
 
 def record_revision(rev):
+    iters = 0
+    count = 0
+    renames = 0
     for rename in get_renames(rev):
-        move(rename)
+        renames += 1
+
+    if renames:
+        with tqdm(desc="moves", total=renames, leave=False) as pbar:
+            for rename in get_renames(rev):
+                move(rename)
+                iters += 1
+                if iters % 20 == 0:
+                    record_all(rev, f"move({count:04d})")
+                    count += 1
+                pbar.update()
     wipe()
     checkout(rev)
     record_all(rev)
@@ -222,12 +238,16 @@ def main():
         wipe()
         checkout(base)
         record_all(base)
-        with tqdm(total=count) as pbar:
-            for rev in gen:
-                record_revision(rev)
-                pbar.update()
-        date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-        tag(f"git-checkpoint {date} {rev}")
+        last = None
+        try:
+            with tqdm(desc="commits", total=count) as pbar:
+                for rev in gen:
+                    record_revision(rev)
+                    pbar.update()
+                    last = rev
+        finally:
+            date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+            tag(f"git-checkpoint {date} {last}")
     finally:
         if branch:
             # checkout(branch)
