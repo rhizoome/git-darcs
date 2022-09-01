@@ -7,8 +7,6 @@ from tqdm import tqdm
 
 _verbose = False
 _devnull = DEVNULL
-if _verbose:
-    _devnull = None
 
 
 def wipe():
@@ -199,7 +197,7 @@ def record_revision(rev):
             for rename in get_renames(rev):
                 move(rename)
                 iters += 1
-                if iters % 20 == 0:
+                if iters % 50 == 0:
                     record_all(rev, f"move({count:04d})")
                     count += 1
                 pbar.update()
@@ -221,8 +219,14 @@ def get_lastest_rev():
 
 
 @click.command()
-def main():
+@click.option("-v/-nv", "--verbose/--no-verbose", default=False)
+def main(verbose):
     """Incremental import of git into darcs."""
+    global _verbose
+    global _devnull
+    _verbose = _verbose
+    if verbose:
+        _devnull = None
     branch = get_current_branch()
     try:
         base = get_lastest_rev()
