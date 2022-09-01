@@ -226,7 +226,7 @@ def checkpoint(rev):
 
 def warning():
     print("Use git-darcs on an extra tracking repository.")
-    print("git-darcs WILL CLEAR ALL YOUR WORK!\n")
+    print("git-darcs WILL CLEAR ALL YOUR WORK! Use -nw to skip this warning.\n")
     print("press enter to continue")
     sys.stdin.readline()
 
