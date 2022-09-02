@@ -359,6 +359,8 @@ def runner(base):
     count = 0
     for rev in get_rev_list(rhead, rbase):
         count += 1
+    if count == 0:
+        return
     gen = get_rev_list(rhead, rbase)
     wipe()
     checkout(rbase)
