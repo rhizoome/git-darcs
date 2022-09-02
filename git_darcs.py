@@ -25,9 +25,9 @@ _boring = """
 
 def handle_shutdown():
     global _shutdown
-    print("use CTRL-D for a graceful shutdown.")
+    print("Use CTRL-D for a graceful shutdown.")
     sys.stdin.read()
-    print("shutting down, use CTRL-C if shutdown takes too long.")
+    print("Shutting down, use CTRL-C if shutdown takes too long.")
     _shutdown = True
 
 
@@ -307,7 +307,7 @@ def checkpoint(rev):
 def warning():
     print("Use git-darcs on an extra tracking repository.")
     print("git-darcs WILL CLEAR ALL YOUR WORK! Use -nw to skip this warning.\n")
-    print("press enter to continue")
+    print("Press enter to continue")
     sys.stdin.readline()
 
 
