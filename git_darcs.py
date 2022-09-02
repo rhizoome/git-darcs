@@ -72,15 +72,16 @@ def optimize():
     run(["darcs", "optimize", "pristine"], check=True)
 
 
-def move(rename):
-    orig, new = rename
-    dir = Path(new).parent
-    dir.mkdir(parents=True, exist_ok=True)
-    add(dir)
-    run(
-        ["darcs", "move", "--case-ok", orig, new],
-        check=True,
-    )
+def move(orig, new):
+    porig = Path(orig)
+    if porig.is_file() or porig.is_dir():
+        dir = Path(new).parent
+        dir.mkdir(parents=True, exist_ok=True)
+        add(dir)
+        run(
+            ["darcs", "move", "--case-ok", orig, new],
+            check=True,
+        )
 
 
 def add(path):
@@ -271,8 +272,8 @@ def record_revision(rev):
 
     if renames:
         with tqdm(desc="moves", total=renames, leave=False, disable=_disable) as pbar:
-            for rename in get_renames(rev):
-                move(rename)
+            for orig, new in get_renames(rev):
+                move(orig, new)
                 iters += 1
                 if iters % 50 == 0:
                     record_all(rev, f"move({count:03d})")
