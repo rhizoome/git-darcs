@@ -36,11 +36,11 @@ _thread = Thread(target=handle_shutdown, daemon=True)
 
 
 class Popen(SPOpen):
-    def __init__(self, *args, stdin=DEVNULL, **kwargs):
+    def __init__(self, *args, stdin=_devnull, **kwargs):
         super().__init__(*args, stdin=stdin, **kwargs)
 
 
-def run(*args, stdout=_devnull, stdin=DEVNULL, **kwargs):
+def run(*args, stdout=_devnull, stdin=_devnull, **kwargs):
     return srun(*args, stdout=stdout, stdin=stdin, **kwargs)
 
 
