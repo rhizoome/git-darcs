@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -80,7 +80,7 @@ def move(orig, new):
         dir.mkdir(parents=True, exist_ok=True)
         add(dir)
         run(
-            ["darcs", "move", "--case-ok", orig, new],
+            ["darcs", "move", "--case-ok", "--reserved-ok", orig, new],
             check=True,
         )
 
@@ -88,7 +88,7 @@ def move(orig, new):
 def add(path):
     try:
         run(
-            ["darcs", "add", "--case-ok", str(path)],
+            ["darcs", "add", "--case-ok", "--reserved-ok", str(path)],
             stderr=PIPE,
             check=True,
         )
