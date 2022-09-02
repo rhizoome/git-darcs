@@ -20,18 +20,29 @@ _boring = """
 
 
 def wipe():
-    run(["git", "reset"], check=True, stdout=_devnull)
-    run(["git", "clean", "-xdf", "--exclude", "/_darcs"], check=True, stdout=_devnull)
+    run(["git", "reset"], check=True, stdout=_devnull, stdin=DEVNULL)
+    run(
+        ["git", "clean", "-xdf", "--exclude", "/_darcs"],
+        check=True,
+        stdout=_devnull,
+        stdin=DEVNULL,
+    )
 
 
 def checkout(rev):
-    run(["git", "checkout", rev], check=True, stdout=_devnull, stderr=_devnull)
+    run(
+        ["git", "checkout", rev],
+        check=True,
+        stdout=_devnull,
+        stderr=_devnull,
+        stdin=DEVNULL,
+    )
 
 
 def optimize():
-    run(["darcs", "optimize", "clean"], check=True, stdout=_devnull)
-    run(["darcs", "optimize", "compress"], check=True, stdout=_devnull)
-    run(["darcs", "optimize", "pristine"], check=True, stdout=_devnull)
+    run(["darcs", "optimize", "clean"], check=True, stdout=_devnull, stdin=DEVNULL)
+    run(["darcs", "optimize", "compress"], check=True, stdout=_devnull, stdin=DEVNULL)
+    run(["darcs", "optimize", "pristine"], check=True, stdout=_devnull, stdin=DEVNULL)
 
 
 def move(rename):
@@ -39,7 +50,12 @@ def move(rename):
     dir = Path(new).parent
     dir.mkdir(parents=True, exist_ok=True)
     add(dir)
-    run(["darcs", "move", "--case-ok", orig, new], check=True, stdout=_devnull)
+    run(
+        ["darcs", "move", "--case-ok", orig, new],
+        check=True,
+        stdout=_devnull,
+        stdin=DEVNULL,
+    )
 
 
 def add(path):
@@ -49,6 +65,7 @@ def add(path):
             stderr=PIPE,
             check=True,
             stdout=_devnull,
+            stdin=DEVNULL,
         )
     except CalledProcessError as e:
         if "No files were added" not in e.stderr.decode("UTF-8"):
@@ -56,15 +73,11 @@ def add(path):
 
 
 def tag(name):
-    run(["darcs", "tag", "--name", name], check=True, stdout=_devnull)
+    run(["darcs", "tag", "--name", name], check=True, stdout=_devnull, stdin=DEVNULL)
 
 
 def get_tags():
-    res = run(
-        ["darcs", "show", "tags"],
-        check=True,
-        stdout=PIPE,
-    )
+    res = run(["darcs", "show", "tags"], check=True, stdout=PIPE, stdin=DEVNULL)
     return res.stdout.decode("UTF-8").strip().splitlines()
 
 
@@ -73,6 +86,7 @@ def get_current_branch():
         ["git", "branch", "--show-current"],
         stdout=PIPE,
         check=True,
+        stdin=DEVNULL,
     )
     branch = res.stdout.decode("UTF-8").strip()
     if _verbose:
@@ -85,6 +99,7 @@ def author(rev):
         ["git", "log", "--pretty=format:'%cN <%cE>'", "--max-count=1", rev],
         stdout=PIPE,
         check=True,
+        stdin=DEVNULL,
     )
     msg = res.stdout.decode("UTF-8").strip()
     if _verbose:
@@ -97,6 +112,7 @@ def message(rev):
         ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
         stdout=PIPE,
         check=True,
+        stdin=DEVNULL,
     )
     msg = res.stdout.decode("UTF-8").strip()
     if _verbose:
@@ -122,6 +138,7 @@ def record_all(rev, postfix=""):
                 msg,
             ],
             check=True,
+            stdin=DEVNULL,
             stdout=PIPE,
             stderr=_devnull,
         )
@@ -144,6 +161,7 @@ def get_rev_list(head, base):
             f"{base}..{head}",
         ],
         stdout=PIPE,
+        stdin=DEVNULL,
     ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
@@ -160,6 +178,7 @@ def get_base():
             ],
             check=True,
             stdout=PIPE,
+            stdin=DEVNULL,
         )
         .stdout.strip()
         .decode("UTF-8")
@@ -170,7 +189,7 @@ def get_base():
 
 
 def get_head():
-    res = run(["git", "rev-parse", "HEAD"], check=True, stdout=PIPE)
+    res = run(["git", "rev-parse", "HEAD"], check=True, stdout=PIPE, stdin=DEVNULL)
     head = res.stdout.strip().decode("UTF-8")
     if _verbose:
         print(head)
@@ -181,6 +200,7 @@ def get_rename_diff(rev):
     with Popen(
         ["git", "show", "--diff-filter=R", rev],
         stdout=PIPE,
+        stdin=DEVNULL,
     ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
