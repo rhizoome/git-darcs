@@ -1,4 +1,5 @@
 import sys
+import os
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -387,6 +388,9 @@ def main(verbose, base, warn):
     global _verbose
     global _devnull
     global _disable
+    pwd = os.environ.get("GIT_DARCS_PWD")
+    if pwd:
+        os.chdir(pwd)
     if warn:
         warning()
     _thread.start()
