@@ -36,7 +36,12 @@ def move(rename):
 
 def add(path):
     try:
-        run(["darcs", "add", str(path)], stderr=PIPE, check=True, stdout=_devnull)
+        run(
+            ["darcs", "add", "--case-ok", str(path)],
+            stderr=PIPE,
+            check=True,
+            stdout=_devnull,
+        )
     except CalledProcessError as e:
         if "No files were added" not in e.stderr.decode("UTF-8"):
             raise
