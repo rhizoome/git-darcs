@@ -296,4 +296,5 @@ def main(verbose, base, warn):
             checkpoint(last)
     finally:
         if branch:
+            wipe()
             checkout(branch)
