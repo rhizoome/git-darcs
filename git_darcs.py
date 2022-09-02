@@ -205,8 +205,8 @@ def get_base():
             [
                 "git",
                 "rev-list",
-                "--all",
                 "--max-parents=0",
+                "HEAD"
             ],
             check=True,
             stdout=PIPE,
