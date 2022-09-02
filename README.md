@@ -1,4 +1,4 @@
-git-darcs - incremental import of git into darcs
+git-darcs - Incremental import of git into darcs
 ================================================
 
 Just call `git-darcs`, it will import the history from the first commit.
@@ -16,7 +16,7 @@ Use a global `gitignore` to ignore `_darcs` in all your repostiories.
 If you don't need any history, so you can import `git-darcs --base main^` and
 then only track new changes from upstream.
 
-for darcs beginners
+For darcs beginners
 -------------------
 
 * You have to read the [darcs book](https://darcsbook.acmelabs.space/), you just
@@ -39,7 +39,7 @@ with and pull the patches (now via `git`) from `project-tracking`.
 Since I always make git-commits from the darcs-patches `git` will track `chmod`
 and symbolic-links for me.
 
-install
+Install
 -------
 
 If your system python isn't 3.10 or newer use:
@@ -49,7 +49,7 @@ If your system python isn't 3.10 or newer use:
 to set a version installed by pyenv. You can probably set a lower version in
 `pyproject.toml`. 3.10 is just the one I am using and I know works.
 
-usage
+Usage
 -----
 
 ```
