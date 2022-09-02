@@ -14,8 +14,10 @@ change the code to fit better.
 for darcs beginners
 -------------------
 
-You have to read the [darcs book](https://darcsbook.acmelabs.space/), you just
-have to.
+* You have to read the [darcs book](https://darcsbook.acmelabs.space/), you just
+  have to.
+* _darcs/pref/boring is the equivalent of .gitignore, but has quite a wide
+  definition of boring by default
 
 Darcs does not handle `chmod` or symbolic-links. The easiest way to workaround
 this, is letting `git` do the work. I have two git/darcs repositories for each

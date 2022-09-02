@@ -1,4 +1,5 @@
 import sys
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, CalledProcessError, Popen, run
@@ -9,6 +10,13 @@ from tqdm import tqdm
 _verbose = False
 _devnull = DEVNULL
 _disable = None
+
+_boring = """
+# git
+(^|/)\.git($|/)
+# darcs
+(^|/)_darcs($|/)
+"""
 
 
 def wipe():
@@ -238,6 +246,58 @@ def warning():
     sys.stdin.readline()
 
 
+@contextmanager
+def less_boring():
+    bfile = Path("_darcs/prefs/boring")
+    disable = Path(bfile.parent, "not_boring")
+    bfile.rename(disable)
+    with bfile.open("w", encoding="UTF-8") as f:
+        f.write(_boring)
+    yield
+    bfile.unlink()
+    disable.rename(bfile)
+
+
+def transfer(gen, count):
+    with tqdm(desc="commits", total=count, disable=_disable) as pbar:
+        iters = 0
+        for rev in gen:
+            record_revision(rev)
+            pbar.update()
+            last = rev
+            iters += 1
+            if iters % 200 == 0:
+                checkpoint(last)
+
+
+def runner(base):
+    rbase = get_lastest_rev()
+    if rbase is None:
+        if base:
+            rbase = base
+        else:
+            rbase = get_base()
+    else:
+        if base:
+            print("Found checkpoint base-option is ignored")
+    rhead = get_head()
+    if rbase == rhead:
+        return
+    count = 0
+    for rev in get_rev_list(rhead, rbase):
+        count += 1
+    gen = get_rev_list(rhead, rbase)
+    wipe()
+    checkout(rbase)
+    with less_boring():
+        record_all(rbase)
+        last = None
+        try:
+            transfer(gen, count)
+        finally:
+            checkpoint(last)
+
+
 @click.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
 @click.option(
@@ -267,38 +327,7 @@ def main(verbose, base, warn):
         _disable = True
     branch = get_current_branch()
     try:
-        rbase = get_lastest_rev()
-        if rbase is None:
-            if base:
-                rbase = base
-            else:
-                rbase = get_base()
-        else:
-            if base:
-                print("Found checkpoint base-option is ignored")
-        rhead = get_head()
-        if rbase == rhead:
-            return
-        count = 0
-        for rev in get_rev_list(rhead, rbase):
-            count += 1
-        gen = get_rev_list(rhead, rbase)
-        wipe()
-        checkout(rbase)
-        record_all(rbase)
-        last = None
-        try:
-            with tqdm(desc="commits", total=count, disable=_disable) as pbar:
-                iters = 0
-                for rev in gen:
-                    record_revision(rev)
-                    pbar.update()
-                    last = rev
-                    iters += 1
-                    if iters % 200 == 0:
-                        checkpoint(last)
-        finally:
-            checkpoint(last)
+        runner(base)
     finally:
         if branch:
             wipe()
