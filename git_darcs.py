@@ -80,6 +80,18 @@ def get_current_branch():
     return branch
 
 
+def author(rev):
+    res = run(
+        ["git", "log", "--pretty=format:'%cN <%cE>'", "--max-count=1", rev],
+        stdout=PIPE,
+        check=True,
+    )
+    msg = res.stdout.decode("UTF-8").strip()
+    if _verbose:
+        print(msg)
+    return msg
+
+
 def message(rev):
     res = run(
         ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
@@ -94,6 +106,7 @@ def message(rev):
 
 def record_all(rev, postfix=""):
     msg = message(rev)
+    by = author(rev)
     if postfix:
         msg = f"{rev} {postfix}"
     try:
@@ -103,6 +116,8 @@ def record_all(rev, postfix=""):
                 "record",
                 "--look-for-adds",
                 "--no-interactive",
+                "--author",
+                by,
                 "--name",
                 msg,
             ],
