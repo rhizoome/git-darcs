@@ -161,6 +161,7 @@ def record_all(rev, postfix=""):
                 "record",
                 "--look-for-adds",
                 "--no-interactive",
+                "--ignore-times",
                 "--author",
                 by,
                 "--name",
