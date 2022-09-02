@@ -274,15 +274,19 @@ def less_boring():
 
 
 def transfer(gen, count):
-    with tqdm(desc="commits", total=count, disable=_disable) as pbar:
-        iters = 0
-        for rev in gen:
-            record_revision(rev)
-            pbar.update()
-            last = rev
-            iters += 1
-            if iters % 100 == 0:
-                checkpoint(last)
+    try:
+        last = None
+        with tqdm(desc="commits", total=count, disable=_disable) as pbar:
+            iters = 0
+            for rev in gen:
+                record_revision(rev)
+                pbar.update()
+                last = rev
+                iters += 1
+                if iters % 100 == 0:
+                    checkpoint(last)
+    finally:
+        checkpoint(last)
 
 
 def runner(base):
@@ -306,11 +310,7 @@ def runner(base):
     checkout(rbase)
     with less_boring():
         record_all(rbase)
-        last = None
-        try:
-            transfer(gen, count)
-        finally:
-            checkpoint(last)
+        transfer(gen, count)
 
 
 @click.command()
