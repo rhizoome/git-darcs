@@ -341,6 +341,9 @@ def transfer(gen, count):
                     checkpoint(last)
                 if _shutdown:
                     sys.exit(0)
+    except Exception:
+        print(f"Failed on revision {last}")
+        raise
     finally:
         checkpoint(last)
 
