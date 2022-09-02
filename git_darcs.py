@@ -209,6 +209,7 @@ def get_base():
         )
         .stdout.strip()
         .decode("UTF-8")
+        .splitlines()[-1]
     )
     if _verbose:
         print(base)
