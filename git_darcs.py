@@ -2,8 +2,10 @@ import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from subprocess import DEVNULL, PIPE, CalledProcessError, Popen
+from subprocess import DEVNULL, PIPE, CalledProcessError
+from subprocess import Popen as SPOpen
 from subprocess import run as srun
+from threading import Thread
 
 import click
 from tqdm import tqdm
@@ -11,6 +13,7 @@ from tqdm import tqdm
 _verbose = False
 _devnull = DEVNULL
 _disable = None
+_shutdown = False
 
 _boring = """
 # git
@@ -20,8 +23,24 @@ _boring = """
 """
 
 
+def handle_shutdown():
+    global _shutdown
+    print("use CTRL-D for a graceful shutdown.")
+    sys.stdin.read()
+    print("shutting down, use CTRL-C if shutdown takes too long.")
+    _shutdown = True
+
+
+_thread = Thread(target=handle_shutdown, daemon=True)
+
+
+class Popen(SPOpen):
+    def __init__(self, *args, stdin=DEVNULL, **kwargs):
+        super().__init__(*args, stdin=DEVNULL, **kwargs)
+
+
 def run(*args, stdout=_devnull, stdin=DEVNULL, **kwargs):
-    return srun(*args, **kwargs, stdout=stdout, stdin=stdin)
+    return srun(*args, stdout=stdout, stdin=stdin, **kwargs)
 
 
 def wipe():
@@ -43,19 +62,14 @@ def checkout(rev):
     )
 
 
+def revert():
+    run(["darcs", "revert", "--no-interactive"])
+
+
 def optimize():
-    run(
-        ["darcs", "optimize", "clean"],
-        check=True,
-    )
-    run(
-        ["darcs", "optimize", "compress"],
-        check=True,
-    )
-    run(
-        ["darcs", "optimize", "pristine"],
-        check=True,
-    )
+    run(["darcs", "optimize", "clean"], check=True)
+    run(["darcs", "optimize", "compress"], check=True)
+    run(["darcs", "optimize", "pristine"], check=True)
 
 
 def move(rename):
@@ -264,6 +278,9 @@ def record_revision(rev):
                     record_all(rev, f"move({count:03d})")
                     count += 1
                 pbar.update()
+                if _shutdown:
+                    revert()
+                    sys.exit(0)
     wipe()
     checkout(rev)
     record_all(rev)
@@ -318,6 +335,8 @@ def transfer(gen, count):
                 iters += 1
                 if iters % 100 == 0:
                     checkpoint(last)
+                if _shutdown:
+                    sys.exit(0)
     finally:
         checkpoint(last)
 
@@ -369,6 +388,7 @@ def main(verbose, base, warn):
     global _disable
     if warn:
         warning()
+    _thread.start()
     _verbose = verbose
     if verbose:
         _devnull = None
