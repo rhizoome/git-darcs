@@ -108,7 +108,7 @@ def record_all(rev, postfix=""):
     msg = message(rev)
     by = author(rev)
     if postfix:
-        msg = f"{rev} {postfix}"
+        msg = f"{msg} {postfix}"
     try:
         res = run(
             [
@@ -281,7 +281,7 @@ def transfer(gen, count):
             pbar.update()
             last = rev
             iters += 1
-            if iters % 200 == 0:
+            if iters % 100 == 0:
                 checkpoint(last)
 
 
