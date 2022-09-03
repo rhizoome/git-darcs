@@ -405,12 +405,14 @@ def runner(base):
         record_all(rbase)
         transfer(gen, count)
 
+
 def checks():
+    """Run basic sanity checks."""
     bailout = False
-    if not Path("_darcs"):
+    if not Path("_darcs").exists():
         bailout = True
         print("darcs repository not initialized.")
-    if not Path("_darcs"):
+    if not Path(".git").exists():
         bailout = True
         print("Please run git-darcs in the root of your git-repo.")
     if bailout:
