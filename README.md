@@ -32,6 +32,9 @@ working-repositories I use `darcs rebase suspend` and `git commit -a -v`.
 For darcs beginners
 -------------------
 
+* There is a great [video](https://hikari.acmelabs.space/videos/hikari-darcs.mp4) by
+  [raichoo](https://hub.darcs.net/raichoo) the maintainer of
+  [hikari](https://hikari.acmelabs.space/)
 * You have to read the [darcs book](https://darcsbook.acmelabs.space/), you just
   have to
 * `_darcs/pref/boring` is the equivalent of `.gitignore`, but has quite a wide
