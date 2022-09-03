@@ -29,6 +29,15 @@ The tool is intentionally very minimal, it is for devs. They can read tracebacks
 or change the code to fit better. To create git patches from my
 working-repositories I use `darcs rebase suspend` and `git commit -a -v`.
 
+But why
+-------
+
+I prefer to group changes by topic, so I am constantly amending patches. This is
+very easy in darcs and more complicated in git. Yes, I know about `--fixup` and
+`--autosquash` in git. Also I can find independent low-risk patches easily with
+`darcs show dependencies`, so I can constantly make PRs. Making the final
+_breaking_ change/PR much smaller. This is less tedious for the reviewers.
+
 For darcs beginners
 -------------------
 
@@ -106,3 +115,24 @@ Options:
   -v, --verbose / -nv, --no-verbose
   --help                          Show this message and exit.
 ```
+
+Linearized history
+------------------
+
+After some trials I deemed my secret sauce:
+
+```bash
+git rev-list
+    --reverse
+    --topo-order
+    --ancestry-path
+    --no-merges
+```
+
+the least confusing traversal option. It will follow an ancestry-path and ignore
+merges. Without `--no-merge` merges will unexpectedly have changes in them,
+because we ignored an ancestor of the merge. Merges have no subject-line, so I
+prefer the changes of the ignored parents to appear in next commit after the
+merge. It is very debatable that this is better, but we just need this changes
+temporarily, it will all end up in the git repository, where it becomes git-ish
+again.
