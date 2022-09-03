@@ -35,6 +35,7 @@ def handle_shutdown():
     print("Use CTRL-D for a graceful shutdown.")
     sys.stdin.read()
     print("Shutting down, use CTRL-C if shutdown takes too long.")
+    print("If you use CTRL-C changes might be recorded twice.")
     _shutdown = True
 
 
@@ -333,9 +334,6 @@ def record_revision(rev):
                     record_all(rev, f"move({count:03d})")
                     count += 1
                 pbar.update()
-                if _shutdown:
-                    revert()
-                    sys.exit(0)
     wipe()
     checkout(rev)
     record_all(rev)
