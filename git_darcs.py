@@ -410,9 +410,14 @@ def main(verbose, base, warn):
         _devnull = None
         _disable = True
     branch = get_current_branch()
+    failed = True
     try:
         runner(base)
+        failed = False
     finally:
         if branch:
-            wipe()
-            checkout(branch)
+            if failed and verbose:
+                print(f"Not restoring to `{branch}` in verbose-mode failure.")
+            else:
+                wipe()
+                checkout(branch)
