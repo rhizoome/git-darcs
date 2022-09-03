@@ -44,6 +44,7 @@ jobs:
           poetry run git-darcs update -nw -s -v
           darcs show tags | grep -q git-checkpoint
           darcs show tags
+          poetry run git-darcs clone . git-darcs-clone -v
       - name: Run black
         run: poetry run black --check .
       - name: Run flake8

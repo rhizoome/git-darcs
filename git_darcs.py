@@ -14,6 +14,7 @@ import click
 from click import ClickException
 from tqdm import tqdm
 
+_uuid = "_b531990e-3187-4b52-be1f-6e4d4d1e40c9"
 _isatty = sys.stdout.isatty()
 _verbose = False
 _devnull = DEVNULL
@@ -40,18 +41,24 @@ def handle_shutdown():
 class Popen(SPOpen):
     """Inject default into Popen."""
 
-    def __init__(self, *args, stdin=None, **kwargs):
+    def __init__(self, *args, stderr=None, stdin=None, **kwargs):
         """Inject default into Popen."""
+        if not stderr:
+            stderr = _devnull
         if not stdin and "input" not in kwargs:
             stdin = _devnull
         super().__init__(*args, stdin=stdin, **kwargs)
 
 
-def run(*args, stdout=_devnull, stdin=None, **kwargs):
+def run(*args, stdout=None, stderr=None, stdin=None, **kwargs):
     """Inject defaults into run."""
+    if not stdout:
+        stdout = _devnull
+    if not stderr:
+        stderr = _devnull
     if not stdin and "input" not in kwargs:
         stdin = _devnull
-    return srun(*args, stdout=stdout, stdin=stdin, **kwargs)
+    return srun(*args, stdout=stdout, stderr=stderr, stdin=stdin, **kwargs)
 
 
 def wipe():
@@ -71,7 +78,6 @@ def checkout(rev):
     run(
         ["git", "checkout", rev],
         check=True,
-        stderr=_devnull,
     )
 
 
@@ -83,6 +89,11 @@ def revert():
 def initialize():
     """Initialize darcs."""
     run(["darcs", "initialize"], check=True)
+
+
+def relink():
+    """Relink darcs-repo, this is a bit of cargo-cult."""
+    run(["darcs", "optimize", "relink"], check=True)
 
 
 def optimize():
@@ -137,6 +148,16 @@ def get_tags():
     return res.stdout.decode("UTF-8").strip().splitlines()
 
 
+def darcs_clone(source, destination):
+    """Clone git-repo."""
+    run(["darcs", "clone", "--no-working-dir", source, destination], check=True)
+
+
+def git_clone(source, destination):
+    """Clone git-repo."""
+    run(["git", "clone", source, destination], check=True)
+
+
 def get_current_branch():
     """Get the current branch from git."""
     res = run(
@@ -176,6 +197,29 @@ def message(rev):
     return msg
 
 
+def get_head():
+    """Get the current head from git."""
+    res = run(
+        ["git", "rev-parse", "HEAD"],
+        check=True,
+        stdout=PIPE,
+    )
+    head = res.stdout.strip().decode("UTF-8")
+    if _verbose:
+        print(head)
+    return head
+
+
+def get_rename_diff(rev):
+    """Request the renames of a commit from git."""
+    with Popen(
+        ["git", "show", "--diff-filter=R", rev],
+        stdout=PIPE,
+    ) as res:
+        while line := res.stdout.readline():
+            yield line.decode("UTF-8").strip()
+
+
 def record_all(rev, postfix=""):
     """Record all change onto the darcs-repo."""
     msg = message(rev)
@@ -197,7 +241,6 @@ def record_all(rev, postfix=""):
             ],
             check=True,
             stdout=PIPE,
-            stderr=_devnull,
         )
         if _verbose:
             print(res.stdout.decode("UTF-8").strip())
@@ -239,29 +282,6 @@ def get_base():
     if _verbose:
         print(base)
     return base
-
-
-def get_head():
-    """Get the current head from git."""
-    res = run(
-        ["git", "rev-parse", "HEAD"],
-        check=True,
-        stdout=PIPE,
-    )
-    head = res.stdout.strip().decode("UTF-8")
-    if _verbose:
-        print(head)
-    return head
-
-
-def get_rename_diff(rev):
-    """Request the renames of a commit from git."""
-    with Popen(
-        ["git", "show", "--diff-filter=R", rev],
-        stdout=PIPE,
-    ) as res:
-        while line := res.stdout.readline():
-            yield line.decode("UTF-8").strip()
 
 
 class RenameDiffState:
@@ -446,10 +466,52 @@ def import_range(base, warn):
                 checkout(branch)
 
 
+def fix_pwd():
+    """Fix pwd if GIT_DARCS_PWD is given."""
+    pwd = os.environ.get("GIT_DARCS_PWD")
+    if pwd:
+        os.chdir(pwd)
+
+
+def setup(warn, verbose):
+    """Set verbose and warn up."""
+    global _verbose
+    global _devnull
+    global _disable
+    if warn:
+        warning()
+    _verbose = verbose
+    if verbose:
+        _devnull = None
+        _disable = True
+
+
 @click.group()
 def main():
     """Click entrypoint."""
-    pass
+    fix_pwd()
+
+
+@main.command()
+@click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
+@click.argument("destination", type=click.Path(exists=False))
+@click.option("-v/-nv", "--verbose/--no-verbose", default=False)
+def clone(source, destination, verbose):
+    """Locally clone a tracking repository to get a working repository."""
+    setup(False, verbose=verbose)
+    destination = Path(destination)
+    if destination.exists():
+        raise ClickException(f"Destination `{destination}` may not exist")
+    git_clone(source, destination)
+    darcs_dest = Path(destination, _uuid)
+    repo_source = Path(darcs_dest, "_darcs")
+    darcs_clone(source, darcs_dest)
+    repo_source = Path(darcs_dest, "_darcs")
+    repo_dest = Path(destination, "_darcs")
+    repo_source.rename(repo_dest)
+    darcs_dest.rmdir()
+    os.chdir(destination)
+    relink()
 
 
 @main.command()
@@ -477,22 +539,11 @@ def update(verbose, base, warn, shallow):
 
     By default it imports from the first commit or the last checkpoint.
     """
-    global _verbose
-    global _devnull
-    global _disable
-    pwd = os.environ.get("GIT_DARCS_PWD")
-    if pwd:
-        os.chdir(pwd)
-    checks(verbose, base, warn, shallow)
-    if warn:
-        warning()
+    setup(warn, verbose=verbose)
     if _isatty:
         _thread = Thread(target=handle_shutdown, daemon=True)
         _thread.start()
-    _verbose = verbose
-    if verbose:
-        _devnull = None
-        _disable = True
+    checks(verbose, base, warn, shallow)
     if shallow:
         import_one()
     else:
