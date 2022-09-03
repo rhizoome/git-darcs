@@ -460,7 +460,7 @@ def main():
 @click.argument("destination", type=click.Path(exists=False))
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
 def clone(source, destination, verbose):
-    """Locally clone a tracking repository to get a working repository."""
+    """Locally clone a tracking repository to get a working-repository."""
     setup(False, verbose=verbose)
     destination = Path(destination)
     if destination.exists():

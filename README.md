@@ -26,7 +26,8 @@ repository locally. Both git and darcs will make sure no history-data is
 duplicated.
 
 The tool intentionally very minimal, it is for devs. They can read tracebacks or
-change the code to fit better.
+change the code to fit better. To create git patches from my working-repositories
+is use `darcs rebase suspend` and `git commit -a -v`.
 
 For darcs beginners
 -------------------
@@ -80,7 +81,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  clone   Locally clone a tracking repository to get a working repository.
+  clone   Locally clone a tracking repository to get a working-repository.
   update  Incremental import of git into darcs.
 ```
 
@@ -106,7 +107,7 @@ Options:
 $> git-darcs clone --help
 Usage: git-darcs clone [OPTIONS] SOURCE DESTINATION
 
-  Locally clone a tracking repository to get a working repository.
+  Locally clone a tracking repository to get a working-repository.
 
 Options:
   -v, --verbose / -nv, --no-verbose
