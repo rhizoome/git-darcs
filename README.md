@@ -68,6 +68,8 @@ Usage
 <a href="https://asciinema.org/a/518694" target="_blank"><img
 src="https://asciinema.org/a/518694.svg" /></a>
 
+Note: this asciinema was made before `shallow` was default.
+
 ```
 $> git-darcs --help
 Usage: git-darcs [OPTIONS] COMMAND [ARGS]...
