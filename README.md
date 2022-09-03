@@ -5,20 +5,28 @@ git-darcs - Incremental import of git into darcs
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
-Just call `git-darcs`, it will import the history from the first commit.
-It will remember (checkpoint) the last imported commit. If you call `git-darcs`
-again it will import from the last checkpoint.
+Just call `git-darcs update`, it will import current git-commit into darcs. If
+you get new commits eg. using `git pull`, you can call `git-darcs update` and it
+will import each commit into darcs.
 
-It will import a **linearized** version if the history, some patches might differ
-from the original git-commit.
+By default the first import is shallow, only importing the current git-commit.
+If you want to import the whole history use `git-darcs update --no-shallow`,
+since we **linearize** history be checking out each commit this can take very
+long.
+
+On the first import you can also supply a custom base-commit `git-darcs update
+--base fa2b982` ignoring history you are not interested in.
+
+The options `base` and `shallow` are ignored after the first import.
+
+Use a global `gitignore` to ignore `_darcs` in all your depositories.
+
+With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
+repository locally. Both git and darcs will make sure no history-data is
+duplicated.
 
 The tool intentionally very minimal, it is for devs. They can read tracebacks or
 change the code to fit better.
-
-Use a global `gitignore` to ignore `_darcs` in all your repostiories.
-
-If you don't need any history, so you can import `git-darcs --base main^` and
-then only track new changes from upstream.
 
 For darcs beginners
 -------------------
@@ -38,7 +46,8 @@ project.
 
 I then pull new darcs-patches from `project-tracking` into `project`. Once my
 the changes are in upstream, I obliterate everything to the checkpoint I started
-with and pull the patches (now via `git`) from `project-tracking`.
+with and pull the patches (now via `git`) from `project-tracking`. Or I remove
+`project` and clone it again from `project-tracking`.
 
 Since I always make git-commits from the darcs-patches `git` will track `chmod`
 and symbolic-links for me.
@@ -84,7 +93,7 @@ Usage: git-darcs update [OPTIONS]
 Options:
   -v, --verbose / -nv, --no-verbose
   -w, --warn / -nw, --no-warn     Warn that repository will be cleaned
-  -b, --base TEXT                 On first import update from (commit-ish)
+  -b, --base TEXT                 On first update import from (commit-ish)
   -s, --shallow / -ns, --no-shallow
                                   On first update only import current commit
   --help                          Show this message and exit.

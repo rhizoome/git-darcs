@@ -37,11 +37,11 @@ jobs:
       - name: Run integration test
         run: |
           rm -rf _darcs
-          poetry run git-darcs update -nw -v
+          poetry run git-darcs update -nw -v -ns
           darcs show tags | grep -q git-checkpoint
           darcs show tags
           rm -rf _darcs
-          poetry run git-darcs update -nw -s -v
+          poetry run git-darcs update -nw -v
           darcs show tags | grep -q git-checkpoint
           darcs show tags
           poetry run git-darcs clone . git-darcs-clone -v

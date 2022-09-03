@@ -403,17 +403,8 @@ def transfer(gen, count):
         checkpoint(last)
 
 
-def runner(base):
+def import_range(rbase):
     """Run the transfer to darcs."""
-    rbase = get_lastest_rev()
-    if rbase is None:
-        if base:
-            rbase = base
-        else:
-            rbase = get_base()
-    else:
-        if base:
-            print("Found checkpoint base-option is ignored")
     rhead = get_head()
     if rbase == rhead:
         return
@@ -430,38 +421,12 @@ def runner(base):
         transfer(gen, count)
 
 
-def checks(verbose, base, warn, shallow):
-    """Run basic sanity checks."""
-    if base and shallow:
-        raise ClickException("Please set only --base or --shallow")
-    if not Path(".git").exists():
-        raise ClickException("Please run git-darcs in the root of your git-repo.")
-    if not Path("_darcs").exists():
-        initialize()
-
-
 def import_one():
     """Import current revisiion."""
     head = get_head()
     wipe()
     checkout(head)
     transfer([head], 1)
-
-
-def import_range(base, warn):
-    """Import multiple commits."""
-    branch = get_current_branch()
-    failed = True
-    try:
-        runner(base)
-        failed = False
-    finally:
-        if branch:
-            if failed and _verbose:
-                print(f"Not restoring to `{branch}` in verbose-mode failure.")
-            else:
-                wipe()
-                checkout(branch)
 
 
 def fix_pwd():
@@ -524,12 +489,12 @@ def clone(source, destination, verbose):
     "--base",
     "-b",
     default=None,
-    help="On first import update from (commit-ish)",
+    help="On first update import from (commit-ish)",
 )
 @click.option(
     "-s/-ns",
     "--shallow/--no-shallow",
-    default=False,
+    default=None,
     help="On first update only import current commit",
 )
 def update(verbose, base, warn, shallow):
@@ -538,11 +503,42 @@ def update(verbose, base, warn, shallow):
     By default it imports from the first commit or the last checkpoint.
     """
     setup(warn, verbose=verbose)
+    if not Path(".git").exists():
+        raise ClickException("Please run git-darcs in the root of your git-repo.")
+    if not Path("_darcs").exists():
+        initialize()
+    rbase = get_lastest_rev()
+    if rbase:
+        do_one = False
+        if base:
+            print("Found git-checkpoint, ignoring base-option")
+        if shallow is True:
+            print("Found git-checkpoint, ignoring shallow-option")
+    else:
+        do_one = True
+        if base:
+            do_one = False
+            rbase = base
+            if shallow is True:
+                print("Found base-option, ignoring shallow-option")
+            if shallow is False:
+                do_one = False
+                rbase = get_base()
     if _isatty:
         _thread = Thread(target=handle_shutdown, daemon=True)
         _thread.start()
-    checks(verbose, base, warn, shallow)
-    if shallow:
-        import_one()
-    else:
-        import_range(base, warn)
+    branch = get_current_branch()
+    failed = True
+    try:
+        if do_one:
+            import_one()
+        else:
+            import_range(rbase)
+        failed = False
+    finally:
+        if branch:
+            if failed and _verbose:
+                print(f"Not restoring to `{branch}` in verbose-mode failure.")
+            else:
+                wipe()
+                checkout(branch)
