@@ -37,7 +37,6 @@ jobs:
       - name: Run integration test
         run: |
           rm -rf _darcs
-          darcs init
           poetry run git-darcs -nw -v
           darcs show tags | grep -q git-checkpoint
           darcs show tags

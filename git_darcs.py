@@ -79,6 +79,11 @@ def revert():
     run(["darcs", "revert", "--no-interactive"])
 
 
+def initialize():
+    """Initialize darcs."""
+    run(["darcs", "initialize"], check=True)
+
+
 def optimize():
     """Optimize darcs-repo, this is a bit of a cargo-cult."""
     run(["darcs", "optimize", "clean"], check=True)
@@ -410,8 +415,7 @@ def checks():
     """Run basic sanity checks."""
     bailout = False
     if not Path("_darcs").exists():
-        bailout = True
-        print("darcs repository not initialized.")
+        initialize()
     if not Path(".git").exists():
         bailout = True
         print("Please run git-darcs in the root of your git-repo.")
