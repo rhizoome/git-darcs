@@ -25,9 +25,9 @@ With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
 duplicated on disk.
 
-The tool intentionally very minimal, it is for devs. They can read tracebacks or
-change the code to fit better. To create git patches from my working-repositories
-I use `darcs rebase suspend` and `git commit -a -v`.
+The tool is intentionally very minimal, it is for devs. They can read tracebacks
+or change the code to fit better. To create git patches from my working-
+repositories I use `darcs rebase suspend` and `git commit -a -v`.
 
 For darcs beginners
 -------------------
@@ -46,22 +46,12 @@ project.
    also containing a `.git` and a `_darcs`
 
 I then pull new darcs-patches from `project-tracking` into `project`. Once my
-the changes are in upstream, I obliterate everything to the checkpoint I started
-with and pull the patches (now via `git`) from `project-tracking`. Or I remove
-`project` and clone it again from `project-tracking`.
+the changes are in upstream, I obliterate everything to the checkpoint (tag) I
+started with and pull the patches (now via `git`) from `project-tracking`. Or I
+remove `project` and clone it again from `project-tracking`.
 
 Since I always make git-commits from the darcs-patches `git` will track `chmod`
 and symbolic-links for me.
-
-Install
--------
-
-If your system python isn't 3.10 or newer use:
-
-`poetry env use $HOME/.pyenv/versions/3.10.5/bin/python3.10`
-
-to set a version installed by pyenv. You can probably set a lower version in
-`pyproject.toml`. 3.10 is just the one I am using and I know works.
 
 Usage
 -----
