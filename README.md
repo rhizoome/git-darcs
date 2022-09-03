@@ -1,6 +1,8 @@
 git-darcs - Incremental import of git into darcs
 ================================================
 
+[pypi](https://pypi.org/project/git-darcs/)
+
 Just call `git-darcs`, it will import the history from the first commit.
 It will remember (checkpoint) the last imported commit. If you call `git-darcs`
 again it will import from the last checkpoint.
