@@ -40,15 +40,15 @@ class Popen(SPOpen):
     """Inject default into Popen."""
 
     def __init__(self, *args, stdin=None, **kwargs):
-        """Well, dear flake8 this is a __init__."""
-        if not stdin:
+        """Inject default into Popen."""
+        if not stdin and "input" not in kwargs:
             stdin = _devnull
         super().__init__(*args, stdin=stdin, **kwargs)
 
 
 def run(*args, stdout=_devnull, stdin=None, **kwargs):
     """Inject defaults into run."""
-    if not stdin:
+    if not stdin and "input" not in kwargs:
         stdin = _devnull
     return srun(*args, stdout=stdout, stdin=stdin, **kwargs)
 
