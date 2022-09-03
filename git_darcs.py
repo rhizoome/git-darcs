@@ -11,6 +11,7 @@ from subprocess import run as srun
 from threading import Thread
 
 import click
+from click import ClickException
 from tqdm import tqdm
 
 _isatty = sys.stdout.isatty()
@@ -411,19 +412,47 @@ def runner(base):
         transfer(gen, count)
 
 
-def checks():
+def checks(verbose, base, warn, shallow):
     """Run basic sanity checks."""
-    bailout = False
+    if base and shallow:
+        raise ClickException("Please set only --base or --shallow")
+    if not Path(".git").exists():
+        raise ClickException("Please run git-darcs in the root of your git-repo.")
     if not Path("_darcs").exists():
         initialize()
-    if not Path(".git").exists():
-        bailout = True
-        print("Please run git-darcs in the root of your git-repo.")
-    if bailout:
-        sys.exit(1)
 
 
-@click.command()
+def import_one():
+    """Import current revisiion."""
+    head = get_head()
+    wipe()
+    checkout(head)
+    transfer([head], 1)
+
+
+def import_range(base, warn):
+    """Import multiple commits."""
+    branch = get_current_branch()
+    failed = True
+    try:
+        runner(base)
+        failed = False
+    finally:
+        if branch:
+            if failed and _verbose:
+                print(f"Not restoring to `{branch}` in verbose-mode failure.")
+            else:
+                wipe()
+                checkout(branch)
+
+
+@click.group()
+def main():
+    """Click entrypoint."""
+    pass
+
+
+@main.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
 @click.option(
     "-w/-nw",
@@ -435,9 +464,15 @@ def checks():
     "--base",
     "-b",
     default=None,
-    help="First import from (commit-ish)",
+    help="On first import update from (commit-ish)",
 )
-def main(verbose, base, warn):
+@click.option(
+    "-s/-ns",
+    "--shallow/--no-shallow",
+    default=False,
+    help="On first update only import current commit",
+)
+def update(verbose, base, warn, shallow):
     """Incremental import of git into darcs.
 
     By default it imports from the first commit or the last checkpoint.
@@ -448,7 +483,7 @@ def main(verbose, base, warn):
     pwd = os.environ.get("GIT_DARCS_PWD")
     if pwd:
         os.chdir(pwd)
-    checks()
+    checks(verbose, base, warn, shallow)
     if warn:
         warning()
     if _isatty:
@@ -458,15 +493,7 @@ def main(verbose, base, warn):
     if verbose:
         _devnull = None
         _disable = True
-    branch = get_current_branch()
-    failed = True
-    try:
-        runner(base)
-        failed = False
-    finally:
-        if branch:
-            if failed and verbose:
-                print(f"Not restoring to `{branch}` in verbose-mode failure.")
-            else:
-                wipe()
-                checkout(branch)
+    if shallow:
+        import_one()
+    else:
+        import_range(base, warn)
