@@ -5,9 +5,9 @@ git-darcs - Incremental import of git into darcs
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
-Just call `git-darcs update`, it will import current git-commit into darcs. If
-you get new commits eg. using `git pull`, you can call `git-darcs update` and it
-will import each commit into darcs.
+Just call `git-darcs update`, it will import the current git-commit into darcs.
+If you get new commits eg. using `git pull`, you can call `git-darcs update` and
+it will import each commit into darcs.
 
 By default the first import is shallow, only importing the current git-commit.
 If you want to import the whole history use `git-darcs update --no-shallow`,
