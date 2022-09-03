@@ -1,7 +1,9 @@
 git-darcs - Incremental import of git into darcs
 ================================================
 
-[pypi](https://pypi.org/project/git-darcs/)
+[![Test](https://github.com/ganwell/git-darcs/actions/workflows/test.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/test.yml) [![CodeQL](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml)
+
+[git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
 Just call `git-darcs`, it will import the history from the first commit.
 It will remember (checkpoint) the last imported commit. If you call `git-darcs`

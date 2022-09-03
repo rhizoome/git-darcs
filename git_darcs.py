@@ -11,6 +11,7 @@ from threading import Thread
 import click
 from tqdm import tqdm
 
+_isatty = sys.stdout.isatty()
 _verbose = False
 _devnull = DEVNULL
 _disable = None
@@ -30,9 +31,6 @@ def handle_shutdown():
     sys.stdin.read()
     print("Shutting down, use CTRL-C if shutdown takes too long.")
     _shutdown = True
-
-
-_thread = Thread(target=handle_shutdown, daemon=True)
 
 
 class Popen(SPOpen):
@@ -103,8 +101,9 @@ def add(path):
 
 def tag(name):
     run(
-        ["darcs", "tag", "--name", name],
+        ["darcs", "tag", "--skip-long-comment", "--name", name],
         check=True,
+        input=b"\n",
     )
 
 
@@ -202,12 +201,7 @@ def get_rev_list(head, base):
 def get_base():
     base = (
         run(
-            [
-                "git",
-                "rev-list",
-                "--max-parents=0",
-                "HEAD"
-            ],
+            ["git", "rev-list", "--max-parents=0", "HEAD"],
             check=True,
             stdout=PIPE,
         )
@@ -404,7 +398,9 @@ def main(verbose, base, warn):
         os.chdir(pwd)
     if warn:
         warning()
-    _thread.start()
+    if _isatty:
+        _thread = Thread(target=handle_shutdown, daemon=True)
+        _thread.start()
     _verbose = verbose
     if verbose:
         _devnull = None
