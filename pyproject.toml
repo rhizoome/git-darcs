@@ -1,9 +1,22 @@
 [tool.poetry]
 name = "git-darcs"
-version = "0.1.4"
+version = "0.1.5"
 description = "Incremental import of git into darcs"
 authors = ["Jean-Louis Fuchs <jean-louis.fuchs@adfinis.com>"]
 license = "AGPL-3.0-or-later"
+homepage = "https://github.com/ganwell/git-darcs"
+repository = "https://github.com/ganwell/git-darcs"
+keywords = ["git", "darcs", "import", "incremental"]
+readme = "README.md"
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Version Control",
+]
+include = [
+    "LICENSE",
+]
 
 [tool.poetry.scripts]
 git-darcs = 'git_darcs:main'
