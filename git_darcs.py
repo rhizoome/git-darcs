@@ -1,3 +1,5 @@
+"""Incremental import of git into darcs."""
+
 import os
 import sys
 from contextlib import contextmanager
@@ -19,13 +21,14 @@ _shutdown = False
 
 _boring = """
 # git
-(^|/)\.git($|/)
+(^|/)\\.git($|/)
 # darcs
 (^|/)_darcs($|/)
 """
 
 
 def handle_shutdown():
+    """Wait for CTRL-D and set _shutdown, to flag a graceful shutdown request."""
     global _shutdown
     print("Use CTRL-D for a graceful shutdown.")
     sys.stdin.read()
@@ -34,19 +37,24 @@ def handle_shutdown():
 
 
 class Popen(SPOpen):
+    """Inject default into Popen."""
+
     def __init__(self, *args, stdin=None, **kwargs):
+        """Well, dear flake8 this is a __init__."""
         if not stdin:
             stdin = _devnull
         super().__init__(*args, stdin=stdin, **kwargs)
 
 
 def run(*args, stdout=_devnull, stdin=None, **kwargs):
+    """Inject defaults into run."""
     if not stdin:
         stdin = _devnull
     return srun(*args, stdout=stdout, stdin=stdin, **kwargs)
 
 
 def wipe():
+    """Completely clean the git-repo except `_darcs`."""
     run(
         ["git", "reset"],
         check=True,
@@ -58,6 +66,7 @@ def wipe():
 
 
 def checkout(rev):
+    """Checkout a git-commit."""
     run(
         ["git", "checkout", rev],
         check=True,
@@ -66,16 +75,19 @@ def checkout(rev):
 
 
 def revert():
+    """Revert recorded changes in darcs."""
     run(["darcs", "revert", "--no-interactive"])
 
 
 def optimize():
+    """Optimize darcs-repo, this is a bit of a cargo-cult."""
     run(["darcs", "optimize", "clean"], check=True)
     run(["darcs", "optimize", "compress"], check=True)
     run(["darcs", "optimize", "pristine"], check=True)
 
 
 def move(orig, new):
+    """Move a file in the darcs-repo."""
     porig = Path(orig)
     if (porig.is_file() or porig.is_dir()) and not porig.is_symlink():
         dir = Path(new).parent
@@ -88,6 +100,7 @@ def move(orig, new):
 
 
 def add(path):
+    """Add a path to the darcs-repo."""
     try:
         run(
             ["darcs", "add", "--case-ok", "--reserved-ok", str(path)],
@@ -100,6 +113,7 @@ def add(path):
 
 
 def tag(name):
+    """Tag a state in the darcs-repo."""
     run(
         ["darcs", "tag", "--skip-long-comment", "--name", name],
         check=True,
@@ -108,6 +122,7 @@ def tag(name):
 
 
 def get_tags():
+    """Get tags from darcs."""
     res = run(
         ["darcs", "show", "tags"],
         check=True,
@@ -117,6 +132,7 @@ def get_tags():
 
 
 def get_current_branch():
+    """Get the current branch from git."""
     res = run(
         ["git", "branch", "--show-current"],
         stdout=PIPE,
@@ -129,6 +145,7 @@ def get_current_branch():
 
 
 def author(rev):
+    """Get the author of a commit from git."""
     res = run(
         ["git", "log", "--pretty=format:'%cN <%cE>'", "--max-count=1", rev],
         stdout=PIPE,
@@ -141,6 +158,7 @@ def author(rev):
 
 
 def message(rev):
+    """Get the short-message of a commit from git."""
     res = run(
         ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
         stdout=PIPE,
@@ -153,6 +171,7 @@ def message(rev):
 
 
 def record_all(rev, postfix=""):
+    """Record all change onto the darcs-repo."""
     msg = message(rev)
     by = author(rev)
     if postfix:
@@ -182,6 +201,7 @@ def record_all(rev, postfix=""):
 
 
 def get_rev_list(head, base):
+    """Get a linearized path from base to head from git."""
     with Popen(
         [
             "git",
@@ -199,6 +219,7 @@ def get_rev_list(head, base):
 
 
 def get_base():
+    """Get the root/base commit from git."""
     base = (
         run(
             ["git", "rev-list", "--max-parents=0", "HEAD"],
@@ -215,6 +236,7 @@ def get_base():
 
 
 def get_head():
+    """Get the current head from git."""
     res = run(
         ["git", "rev-parse", "HEAD"],
         check=True,
@@ -227,6 +249,7 @@ def get_head():
 
 
 def get_rename_diff(rev):
+    """Request the renames of a commit from git."""
     with Popen(
         ["git", "show", "--diff-filter=R", rev],
         stdout=PIPE,
@@ -236,12 +259,15 @@ def get_rename_diff(rev):
 
 
 class RenameDiffState:
+    """State-machine for the rename parser."""
+
     INIT = 1
     IN_DIFF = 2
     ORIG_FOUND = 3
 
 
 def get_renames(rev):
+    """Parse the renames from a git-rename-diff."""
     s = RenameDiffState
     state = s.INIT
     orig = ""
@@ -265,10 +291,11 @@ def get_renames(rev):
 
 
 def record_revision(rev):
+    """Record a revision, pre-record moves if there are any."""
     iters = 0
     count = 0
     renames = 0
-    for rename in get_renames(rev):
+    for _ in get_renames(rev):
         renames += 1
 
     if renames:
@@ -289,6 +316,7 @@ def record_revision(rev):
 
 
 def get_lastest_rev():
+    """Get the latest git-commit recorded in darcs."""
     res = []
     start = "git-checkpoint "
     for tag in get_tags():
@@ -301,20 +329,24 @@ def get_lastest_rev():
 
 
 def checkpoint(rev):
+    """Tag/checkpoint the current git-commit."""
     date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
     tag(f"git-checkpoint {date} {rev}")
     optimize()
 
 
 def warning():
+    """Print a warning that git-darcs is going to wipe uncommitted change."""
     print("Use git-darcs on an extra tracking repository.")
-    print("git-darcs WILL CLEAR ALL YOUR WORK! Use -nw to skip this warning.\n")
+    print("git-darcs WILL CLEAR ALL YOUR WORK THAT IS NOT COMMITED!")
+    print("Use -nw to skip this warning.\n")
     print("Press enter to continue")
     sys.stdin.readline()
 
 
 @contextmanager
 def less_boring():
+    """Replace boring with one that only ignores `.git` and `_darcs`."""
     bfile = Path("_darcs/prefs/boring")
     disable = Path(bfile.parent, "not_boring")
     bfile.rename(disable)
@@ -326,6 +358,7 @@ def less_boring():
 
 
 def transfer(gen, count):
+    """Transfer the git-commits to darcs."""
     try:
         last = None
         with tqdm(desc="commits", total=count, disable=_disable) as pbar:
@@ -347,6 +380,7 @@ def transfer(gen, count):
 
 
 def runner(base):
+    """Run the transfer to darcs."""
     rbase = get_lastest_rev()
     if rbase is None:
         if base:
@@ -360,7 +394,7 @@ def runner(base):
     if rbase == rhead:
         return
     count = 0
-    for rev in get_rev_list(rhead, rbase):
+    for _ in get_rev_list(rhead, rbase):
         count += 1
     if count == 0:
         return
@@ -389,7 +423,8 @@ def runner(base):
 def main(verbose, base, warn):
     """Incremental import of git into darcs.
 
-    By default it imports from the first commit or the last checkpoint."""
+    By default it imports from the first commit or the last checkpoint.
+    """
     global _verbose
     global _devnull
     global _disable
