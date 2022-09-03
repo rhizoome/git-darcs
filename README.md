@@ -90,7 +90,8 @@ Usage: git-darcs update [OPTIONS]
 
   Incremental import of git into darcs.
 
-  By default it imports from the first commit or the last checkpoint.
+  By default it imports a shallow copy (the current commit). Use `--no-
+  shallow` to import the complete history.
 
 Options:
   -v, --verbose / -nv, --no-verbose
