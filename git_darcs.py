@@ -79,7 +79,7 @@ def optimize():
 
 def move(orig, new):
     porig = Path(orig)
-    if porig.is_file() or porig.is_dir():
+    if (porig.is_file() or porig.is_dir()) and not porig.is_symlink():
         dir = Path(new).parent
         dir.mkdir(parents=True, exist_ok=True)
         add(dir)
