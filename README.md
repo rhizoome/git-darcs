@@ -26,8 +26,8 @@ repository locally. Both git and darcs will make sure no history-data is
 duplicated on disk.
 
 The tool is intentionally very minimal, it is for devs. They can read tracebacks
-or change the code to fit better. To create git patches from my working-
-repositories I use `darcs rebase suspend` and `git commit -a -v`.
+or change the code to fit better. To create git patches from my
+working-repositories I use `darcs rebase suspend` and `git commit -a -v`.
 
 For darcs beginners
 -------------------
