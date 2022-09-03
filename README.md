@@ -57,7 +57,22 @@ Usage
 -----
 
 ```
-Usage: git-darcs [OPTIONS]
+$> git-darcs --help
+Usage: git-darcs [OPTIONS] COMMAND [ARGS]...
+
+  Click entrypoint.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  clone   Locally clone a tracking repository to get a working repository.
+  update  Incremental import of git into darcs.
+```
+
+```
+$> git-darcs update --help
+Usage: git-darcs update [OPTIONS]
 
   Incremental import of git into darcs.
 
@@ -66,6 +81,19 @@ Usage: git-darcs [OPTIONS]
 Options:
   -v, --verbose / -nv, --no-verbose
   -w, --warn / -nw, --no-warn     Warn that repository will be cleaned
-  -b, --base TEXT                 First import from (commit-ish)
+  -b, --base TEXT                 On first import update from (commit-ish)
+  -s, --shallow / -ns, --no-shallow
+                                  On first update only import current commit
+  --help                          Show this message and exit.
+```
+
+```
+$> git-darcs clone --help
+Usage: git-darcs clone [OPTIONS] SOURCE DESTINATION
+
+  Locally clone a tracking repository to get a working repository.
+
+Options:
+  -v, --verbose / -nv, --no-verbose
   --help                          Show this message and exit.
 ```
