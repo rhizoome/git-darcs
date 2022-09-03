@@ -23,7 +23,7 @@ Use a global `gitignore` to ignore `_darcs` in all your depositories.
 
 With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
-duplicated.
+duplicated on disk.
 
 The tool intentionally very minimal, it is for devs. They can read tracebacks or
 change the code to fit better. To create git patches from my working-repositories
