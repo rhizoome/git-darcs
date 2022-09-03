@@ -405,6 +405,17 @@ def runner(base):
         record_all(rbase)
         transfer(gen, count)
 
+def checks():
+    bailout = False
+    if not Path("_darcs"):
+        bailout = True
+        print("darcs repository not initialized.")
+    if not Path("_darcs"):
+        bailout = True
+        print("Please run git-darcs in the root of your git-repo.")
+    if bailout:
+        sys.exit(1)
+
 
 @click.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
@@ -431,6 +442,7 @@ def main(verbose, base, warn):
     pwd = os.environ.get("GIT_DARCS_PWD")
     if pwd:
         os.chdir(pwd)
+    checks()
     if warn:
         warning()
     if _isatty:
