@@ -56,6 +56,9 @@ to set a version installed by pyenv. You can probably set a lower version in
 Usage
 -----
 
+<a href="https://asciinema.org/a/518694" target="_blank"><img
+src="https://asciinema.org/a/518694.svg" /></a>
+
 ```
 $> git-darcs --help
 Usage: git-darcs [OPTIONS] COMMAND [ARGS]...
