@@ -119,20 +119,14 @@ Options:
 Linearized history
 ------------------
 
-After some trials I deemed my secret sauce:
+Currently we traverse the repository with this secret sauce:
 
 ```bash
 git rev-list
     --reverse
     --topo-order
     --ancestry-path
-    --no-merges
 ```
 
-the least confusing traversal option. It will follow an ancestry-path and ignore
-merges. Without `--no-merge` merges will unexpectedly have changes in them,
-because we ignored an ancestor of the merge. Merges have no subject-line, so I
-prefer the changes of the ignored parents to appear in next commit after the
-merge. It is very debatable that this is better, but we just need this changes
-temporarily, it will all end up in the git repository, where it becomes git-ish
-again.
+It can lead to quite confusing results. There is no way for a perfect result,
+but I am still experimenting.

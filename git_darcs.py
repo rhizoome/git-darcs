@@ -259,7 +259,6 @@ def get_rev_list(head, base):
             "--reverse",
             "--topo-order",
             "--ancestry-path",
-            "--no-merges",
             f"{base}..{head}",
         ],
         stdout=PIPE,
