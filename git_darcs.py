@@ -522,9 +522,9 @@ def update(verbose, base, warn, shallow):
             rbase = base
             if shallow is True:
                 print("Found base-option, ignoring shallow-option")
-            if shallow is False:
-                do_one = False
-                rbase = get_base()
+        if shallow is False:
+            do_one = False
+            rbase = get_base()
     if _isatty:
         _thread = Thread(target=handle_shutdown, daemon=True)
         _thread.start()
