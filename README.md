@@ -11,8 +11,8 @@ it will import each commit into darcs.
 
 By default the first import is shallow, only importing the current git-commit.
 If you want to import the whole history use `git-darcs update --no-shallow`,
-since we **linearize** history be checking out each commit this can take very
-long.
+since we **linearize** the history by checking out each commit this can take
+very long.
 
 On the first import you can also supply a custom base-commit `git-darcs update
 --base fa2b982` ignoring history you are not interested in.
@@ -27,7 +27,7 @@ duplicated on disk.
 
 The tool intentionally very minimal, it is for devs. They can read tracebacks or
 change the code to fit better. To create git patches from my working-repositories
-is use `darcs rebase suspend` and `git commit -a -v`.
+I use `darcs rebase suspend` and `git commit -a -v`.
 
 For darcs beginners
 -------------------
