@@ -156,7 +156,7 @@ def darcs_clone(source, destination):
     run(["darcs", "clone", "--no-working-dir", source, destination], check=True)
 
 
-def git_try_fast_forward(last, rev):
+def git_try_fast_forward(rev, last):
     """Clone git-repo."""
     try:
         run(["git", "merge", "--no-commit", "--ff-only", rev], check=True)
@@ -199,17 +199,24 @@ def author(rev):
     return msg
 
 
-def oneline(rev):
+def onelines(rev, last=None):
     """Get the short-message of a commit from git."""
-    res = run(
-        ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
-        stdout=PIPE,
-        check=True,
-    )
+    if last:
+        res = run(
+            ["git", "log", "--oneline", "--no-decorate", f"{last}..{rev}"],
+            stdout=PIPE,
+            check=True,
+        )
+    else:
+        res = run(
+            ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
+            stdout=PIPE,
+            check=True,
+        )
     msg = res.stdout.decode("UTF-8").strip()
     if _verbose:
         print(msg)
-    return msg
+    return msg.splitlines()
 
 
 def get_head():
@@ -225,9 +232,11 @@ def get_head():
     return head
 
 
-def record_all(rev, postfix=None, comments=None):
+def record_all(rev, last=None, postfix=None, comments=None):
     """Record all change onto the darcs-repo."""
-    msg = oneline(rev)
+    msgs = onelines(rev, last)
+    msg = msgs[0]
+    comments = "\n".join(msgs[1:])
     by = author(rev)
     if postfix:
         msg = f"{msg} {postfix}"
@@ -304,7 +313,7 @@ class RenameDiffState:
     ORIG_FOUND = 3
 
 
-def get_rename_diff(last, rev):
+def get_rename_diff(rev, last=None):
     """Request the renames of a commit from git."""
     assert last != rev
     if last is None:
@@ -321,13 +330,13 @@ def get_rename_diff(last, rev):
             yield line.decode("UTF-8").strip()
 
 
-def get_renames(last, rev):
+def get_renames(rev, last=None):
     """Parse the renames from a git-rename-diff."""
     s = RenameDiffState
     state = s.INIT
     orig = ""
     new = ""
-    for line in get_rename_diff(last, rev):
+    for line in get_rename_diff(rev, last):
         if state == s.INIT:
             if line.startswith("diff --git"):
                 state = s.IN_DIFF
@@ -345,17 +354,17 @@ def get_renames(last, rev):
                 state = s.IN_DIFF
 
 
-def record_revision(last, rev):
+def record_revision(rev, last=None):
     """Record a revision, pre-record moves if there are any."""
     iters = 0
     count = 0
     renames = 0
-    for _ in get_renames(last, rev):
+    for _ in get_renames(rev, last):
         renames += 1
 
     if renames:
         with tqdm(desc="moves", total=renames, leave=False, disable=_disable) as pbar:
-            for orig, new in get_renames(last, rev):
+            for orig, new in get_renames(rev, last):
                 move(orig, new)
                 iters += 1
                 if iters % 50 == 0:
@@ -364,7 +373,7 @@ def record_revision(last, rev):
                 pbar.update()
     wipe()
     checkout(rev)
-    record_all(rev)
+    record_all(rev, last)
 
 
 def get_lastest_rev():
@@ -409,33 +418,24 @@ def less_boring():
     disable.rename(bfile)
 
 
-def transfer(gen, count):
+def transfer(gen, count, last=None):
     """Transfer the git-commits to darcs."""
     try:
-        last = None
         with tqdm(desc="commits", total=count, disable=_disable) as pbar:
             records = 0
-            first = True
             for rev in gen:
-                recorded = False
-                if first:
-                    first = False
-                    record_revision(last, rev)
+                if git_try_fast_forward(rev, last):
+                    record_revision(rev, last)
                     last = rev
                     recorded = True
-                else:
-                    if git_try_fast_forward(last, rev):
-                        record_revision(last, rev)
-                        last = rev
-                        recorded = True
-                        records += 1
-                        if records % 100 == 0:
-                            checkpoint(last)
+                    records += 1
+                    if records % 100 == 0:
+                        checkpoint(last)
                 pbar.update()
                 if _shutdown:
                     sys.exit(0)
             if not recorded:
-                record_revision(last, rev)
+                record_revision(rev, last)
                 last = rev
     except Exception:
         print(f"Failed on revision {last}")
@@ -459,7 +459,7 @@ def import_range(rbase):
     checkout(rbase)
     with less_boring():
         record_all(rbase)
-        transfer(gen, count)
+        transfer(gen, count, rbase)
 
 
 def import_one():
@@ -541,8 +541,8 @@ def clone(source, destination, verbose):
 def update(verbose, base, warn, shallow):
     """Incremental import of git into darcs.
 
-    By default it imports a shallow copy (the current commit). Use `--no-shallow` to
-    import the complete history.
+    By default it imports a shallow copy (the current commit). Use `--no-shallow`
+    to import the complete history.
     """
     setup(warn, verbose=verbose)
     if not Path(".git").exists():
