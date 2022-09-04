@@ -251,3 +251,57 @@ record the changes on branch `a`.
 * 44d8cd1 start
     addfile ./start
 ```
+
+I just realized that I only tried conflicting merges, lets see what happens with
+a conflict-free merge:
+
+```
+$> git log --oneline --graph
+* eef24d8 (HEAD -> master) end > end0
+* 841c900 end
+*   969ad57 Merge branch 'b'
+|\
+| * 76ca538 (b) bb2 > bb3
+| * 0040cee bb1 > bb2
+* | 663168a antiforward > antiforward0
+* |   0d94733 Merge branch 'a'
+|\ \
+| * | d26d325 (a) aa2 > aa3
+| * | 8090696 aa1 > aa2
+| |/
+* / fa7accb antiforward
+|/
+* 7bc2b76 aa0 > aa1, bb0 > bb1
+* 665937d aa > aa0, bb bb0
+* 1fd0236 aa, bb
+```
+
+git-darcs wasn't able to fast-forward branch 'b', so 969ad57 contains all the
+move done in `b`: `bb1` will skip to `bb3` directly, as expected.
+
+```
+* eef24d8 end > end0
+    move ./end ./end0
+* 841c900 end
+    addfile ./end
+* 969ad57 Merge branch 'b'
+  76ca538 bb2 > bb3
+  0040cee bb1 > bb2
+    move ./bb1 ./bb3
+* 663168a antiforward > antiforward0
+    move ./antiforward ./antiforward0
+* 0d94733 Merge branch 'a'
+  d26d325 aa2 > aa3
+  8090696 aa1 > aa2
+    move ./aa1 ./aa3
+* fa7accb antiforward
+    addfile ./antiforward
+* 7bc2b76 aa0 > aa1, bb0 > bb1
+    move ./aa0 ./aa1
+    move ./bb0 ./bb1
+* 665937d aa > aa0, bb bb0
+    move ./aa ./aa0
+    move ./bb ./bb0
+* 1fd0236 aa, bb
+    addfile ./aa
+```
