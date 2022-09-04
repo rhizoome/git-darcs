@@ -5,6 +5,8 @@ git-darcs - Incremental import of git into darcs
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
+See "Linearized history" for the big problem with this approach.
+
 Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and
 it will import each commit into darcs.
@@ -80,11 +82,11 @@ Usage: git-darcs [OPTIONS] COMMAND [ARGS]...
   Click entrypoint.
 
 Options:
-  --help  Show this message and exit.
+  --help  Sow this message and exit.
 
 Commands:
   clone   Locally clone a tracking repository to get a working-repository.
-  update  Incremental import of git into darcs.
+  update  Incremental import o git into darcs.
 ```
 
 ```
@@ -119,14 +121,75 @@ Options:
 Linearized history
 ------------------
 
-Currently we traverse the repository with this secret sauce:
+After some trials I deemed my secret sauce:
 
 ```bash
 git rev-list
     --reverse
     --topo-order
     --ancestry-path
+    --no-merges
 ```
 
-It can lead to quite confusing results. There is no way for a perfect result,
-but I am still experimenting.
+the least confusing traversal option. It will follow an ancestry-path and ignore
+merges. But with parallel history the result is bad.
+
+This:
+
+```bash
+$> git log -p .
+commit 6723b82b4328bced84f1f761095683918e193e8f (HEAD -> master)
+Merge: 5700f36 dde8155
+
+    Merge branch 'b'
+
+commit dde8155c5cd69613dbfe4d3da3a8de0ffa543ddc (b)
+
+    b
+
+diff --git a/b b/b
+new file mode 100644
+index 0000000..e69de29
+
+commit 5700f36c30a5c6e5f783c0a685c1f97e266c232c (a)
+
+    a
+
+diff --git a/a b/a
+new file mode 100644
+index 0000000..e69de29
+
+commit c40c0c924849baa89a074789eac82eea87d934bc
+
+    start
+
+diff --git a/start b/start
+new file mode 100644
+index 0000000..e69de29
+```
+
+becomes this:
+
+```
+patch 0014c8c6d7255819e5dc6645e73cbfee985ac493
+  tagged git-checkpoint 2022-09-03T23:34:09.731312 dde8155c5cd69613dbfe4d3da3a8de0ffa543ddc
+    depend 6fb75f20aba30c5cf943572c53290cc6446741e4
+      * dde8155 b
+    depend fda79254573d7f1b3a50ea0e4a057a3b210d3284
+      * 5700f36 a
+    depend 46ac34b0119697fdae7e32329554367c30627b10
+      * c40c0c9 start
+
+patch 6fb75f20aba30c5cf943572c53290cc6446741e4
+  * dde8155 b
+    rmfile ./a
+    addfile ./b
+
+patch fda79254573d7f1b3a50ea0e4a057a3b210d3284
+  * 5700f36 a
+    addfile ./a
+
+patch 46ac34b0119697fdae7e32329554367c30627b10
+  * c40c0c9 start
+    addfile ./start
+```
