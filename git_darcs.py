@@ -207,7 +207,6 @@ def onelines(rev, *, last=None):
                 "log",
                 "--oneline",
                 "--no-decorate",
-                "--ancestry-path",
                 "--date-order",
                 "--no-merges",
                 f"{last}..{rev}",
