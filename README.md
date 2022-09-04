@@ -171,6 +171,7 @@ index 0000000..e69de29
 becomes this:
 
 ```
+$> darcs log -v
 patch 0014c8c6d7255819e5dc6645e73cbfee985ac493
   tagged git-checkpoint 2022-09-03T23:34:09.731312 dde8155c5cd69613dbfe4d3da3a8de0ffa543ddc
     depend 6fb75f20aba30c5cf943572c53290cc6446741e4

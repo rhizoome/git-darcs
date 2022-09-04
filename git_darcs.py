@@ -175,7 +175,7 @@ def get_current_branch():
 def author(rev):
     """Get the author of a commit from git."""
     res = run(
-        ["git", "log", "--pretty=format:'%cN <%cE>'", "--max-count=1", rev],
+        ["git", "log", "--pretty=format:%cN <%cE>", "--max-count=1", rev],
         stdout=PIPE,
         check=True,
     )
