@@ -35,14 +35,15 @@ read tracebacks or change the code to fit better. There are no pytests, yet,
 just me using it and having done a lot of tests to find the optimal linearized
 history.
 
-But why
--------
+But why?
+--------
 
-I prefer to group changes by topic, so I am constantly amending patches. This is
-very easy in darcs and more complicated in git. Yes, I know about `--fixup` and
-`--autosquash` in git. Also I can find independent low-risk patches easily with
-`darcs show dependencies`, so I can constantly make PRs. Making the final
-_breaking_ change/PR much smaller. This is less tedious for the reviewers.
+I prefer to group changes by topic, so I am constantly amending commits/patches.
+This is very easy in darcs and more complicated in git. Yes, I know about
+`--fixup` and `--autosquash` in git. Also I can find independent low-risk
+patches easily with `darcs show dependencies`, so I can constantly make PRs.
+Making the final _breaking_ change/PR much smaller. This is less tedious for the
+reviewers.
 
 For darcs beginners
 -------------------
