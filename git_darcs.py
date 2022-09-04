@@ -160,12 +160,11 @@ def git_try_fast_forward(rev, last):
     """Clone git-repo."""
     try:
         run(["git", "merge", "--no-commit", "--ff-only", rev], check=True)
+        wipe()
+        checkout(last)
         return True
     except CalledProcessError:
         return False
-    finally:
-        wipe()
-        checkout(last)
 
 
 def git_clone(source, destination):
