@@ -128,11 +128,10 @@ git rev-list
     --reverse
     --topo-order
     --ancestry-path
-    --no-merges
 ```
 
-the least confusing traversal option. It will follow an ancestry-path and ignore
-merges. But with parallel history the result is bad.
+the least confusing traversal option. It will follow an ancestry-path in
+topo-order. But with parallel history the result is bad.
 
 This:
 
