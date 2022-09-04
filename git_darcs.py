@@ -467,7 +467,8 @@ def import_one():
     head = get_head()
     wipe()
     checkout(head)
-    transfer([head], 1)
+    record_all(head)
+    checkpoint(head)
 
 
 def fix_pwd():
