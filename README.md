@@ -7,7 +7,8 @@ git-darcs - Incremental import of git into darcs
 
 Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and
-it will import each commit into darcs.
+it will import each commit into darcs. git-darcs will walk a truly linear
+git-history, but it has some caveats. See: `Linearized history`
 
 By default the first import is shallow, only importing the current git-commit.
 If you want to import the whole history use `git-darcs update --no-shallow`,
@@ -119,4 +120,134 @@ Options:
 Linearized history
 ------------------
 
-Fixed, but TODO caveats.
+If the history forks git-darcs will walk the history-branch offered by `git
+rev-list --topo-order`. It will try to fast-forward every revision it gets into
+the current revision. On the 'main' branch this will always work, so it will
+record all these revisions. On the other branches (of the history) this will
+fail and it will skip all these revisions, until the branches merge again and
+fast-forward is possible.
+
+git-darcs will track any moves that happened when skipping revisions so all
+these moves will get recorded. It will add the complete log of the skipped
+revisions into the patch that records all these changes.
+
+This git-history:
+
+```
+$> git log --oneline --graph
+* 74b2d99 (HEAD -> master) end > end0
+* 9de72f8 end
+*   a5f4bfb Merge branch 'b'
+|\
+| * 9c5e6c4 (b) bc, start1b1 > start1b2, ba0 > ba1, bb > bb0
+| * 00781ed bb, start1b0 > start1b1, ba > ba0
+| * 259f647 ba, start1 > start1b0
+* | deab3ea start_merged > start_merged1
+* |   de04805 Merge branch 'a'
+|\ \
+| * | 1e6f333 (a) ac, start1a1 > start1a2, aa0 > aa1, ab > ab0
+| * | 63ccd72 aa, start1a0 > start1a1, aa > aa0
+| * | a28638c aa, start1 > start1a0
+| |/
+* / c64713f start1 > start2
+|/
+* 83c267b start0 > start1
+* 712ec2d start > start0
+* 44d8cd1 start
+```
+
+becomes this darcs-history Note that the moves correspond to the moves I logged,
+there is never a `rmfile` or a `move` in the wrong direction. Here darcs
+couldn't record branch `a` or `b` so all the changes appear in the patches
+corresponding to the merge-commits.
+
+```
+* 74b2d99 end > end0
+    move ./end ./end0
+* 9de72f8 end
+    addfile ./end
+* a5f4bfb Merge branch 'b'
+  9c5e6c4 bc, start1b1 > start1b2, ba0 > ba1, bb > bb0
+  00781ed bb, start1b0 > start1b1, ba > ba0
+  259f647 ba, start1 > start1b0
+    move ./start_merged1 ./start
+    addfile ./ba1
+    addfile ./bb0
+    addfile ./bc
+* deab3ea start_merged > start_merged1
+    move ./start_merged ./start_merged1
+* de04805 Merge branch 'a'
+  1e6f333 ac, start1a1 > start1a2, aa0 > aa1, ab > ab0
+  63ccd72 aa, start1a0 > start1a1, aa > aa0
+  a28638c aa, start1 > start1a0
+    move ./start2 ./start_merged
+    addfile ./aa1
+    addfile ./ab0
+    addfile ./ac
+* c64713f start1 > start2
+    move ./start1 ./start2
+* 83c267b start0 > start1
+    move ./start0 ./start1
+* 712ec2d start > start0
+    move ./start ./start0
+* 44d8cd1 start
+    addfile ./start
+```
+
+However if we remove the commit that prevented fast-forward, we get this
+git-history:
+
+```
+$> git log --oneline --graph
+* 4d57edd (HEAD -> master) end > end0
+* 6526a18 end
+*   f4facb0 Merge branch 'b'
+|\
+| * 9c5e6c4 (b) bc, start1b1 > start1b2, ba0 > ba1, bb > bb0
+| * 00781ed bb, start1b0 > start1b1, ba > ba0
+| * 259f647 ba, start1 > start1b0
+* | 1e6f333 (a) ac, start1a1 > start1a2, aa0 > aa1, ab > ab0
+* | 63ccd72 aa, start1a0 > start1a1, aa > aa0
+* | a28638c aa, start1 > start1a0
+|/
+* 83c267b start0 > start1
+* 712ec2d start > start0
+* 44d8cd1 start
+```
+
+Again, there are no `rmfile` or `move` in the wrong direction, but it could
+record the changes on branch `a`.
+
+```
+
+* 4d57edd end > end0
+    move ./end ./end0
+* 6526a18 end
+    addfile ./end
+* f4facb0 Merge branch 'b'
+  9c5e6c4 bc, start1b1 > start1b2, ba0 > ba1, bb > bb0
+  00781ed bb, start1b0 > start1b1, ba > ba0
+  259f647 ba, start1 > start1b0
+    move ./start1a2 ./start1_merged
+    addfile ./ba1
+    addfile ./bb0
+    addfile ./bc
+* 1e6f333 ac, start1a1 > start1a2, aa0 > aa1, ab > ab0
+    move ./aa0 ./aa1
+    move ./ab ./ab0
+    move ./start1a1 ./start1a2
+    addfile ./ac
+* 63ccd72 aa, start1a0 > start1a1, aa > aa0
+    move ./aa ./aa0
+    move ./start1a0 ./start1a1
+    addfile ./ab
+* a28638c aa, start1 > start1a0
+    move ./start1 ./start1a0
+    addfile ./aa
+* 83c267b start0 > start1
+    move ./start0 ./start1
+* 712ec2d start > start0
+    move ./start ./start0
+* 44d8cd1 start
+    addfile ./start
+```
