@@ -74,7 +74,8 @@ Usage
 <a href="https://asciinema.org/a/518694" target="_blank"><img
 src="https://asciinema.org/a/518694.svg" /></a>
 
-Note: this asciinema was made before `shallow` was default.
+Note: this asciinema was made before `shallow` was default and before the
+improved linearized history.
 
 ```
 $> git-darcs --help
