@@ -202,7 +202,16 @@ def onelines(rev, *, last=None):
     """Get the short-message of a commit from git."""
     if last:
         res = run(
-            ["git", "log", "--oneline", "--no-decorate", f"{last}..{rev}"],
+            [
+                "git",
+                "log",
+                "--oneline",
+                "--no-decorate",
+                "--ancestry-path",
+                "--date-order",
+                "--no-merges",
+                f"{last}..{rev}",
+            ],
             stdout=PIPE,
             check=True,
         )
