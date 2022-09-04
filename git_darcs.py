@@ -199,7 +199,7 @@ def author(rev):
     return msg
 
 
-def onelines(rev, last=None):
+def onelines(rev, *, last=None):
     """Get the short-message of a commit from git."""
     if last:
         res = run(
@@ -232,9 +232,9 @@ def get_head():
     return head
 
 
-def record_all(rev, last=None, postfix=None, comments=None):
+def record_all(rev, *, last=None, postfix=None, comments=None):
     """Record all change onto the darcs-repo."""
-    msgs = onelines(rev, last)
+    msgs = onelines(rev, last=last)
     msg = msgs[0]
     comments = "\n".join(msgs[1:])
     by = author(rev)
@@ -313,7 +313,7 @@ class RenameDiffState:
     ORIG_FOUND = 3
 
 
-def get_rename_diff(rev, last=None):
+def get_rename_diff(rev, *, last=None):
     """Request the renames of a commit from git."""
     assert last != rev
     if last is None:
@@ -330,13 +330,13 @@ def get_rename_diff(rev, last=None):
             yield line.decode("UTF-8").strip()
 
 
-def get_renames(rev, last=None):
+def get_renames(rev, *, last=None):
     """Parse the renames from a git-rename-diff."""
     s = RenameDiffState
     state = s.INIT
     orig = ""
     new = ""
-    for line in get_rename_diff(rev, last):
+    for line in get_rename_diff(rev, last=last):
         if state == s.INIT:
             if line.startswith("diff --git"):
                 state = s.IN_DIFF
@@ -354,26 +354,26 @@ def get_renames(rev, last=None):
                 state = s.IN_DIFF
 
 
-def record_revision(rev, last=None):
+def record_revision(rev, *, last=None):
     """Record a revision, pre-record moves if there are any."""
     iters = 0
     count = 0
     renames = 0
-    for _ in get_renames(rev, last):
+    for _ in get_renames(rev, last=last):
         renames += 1
 
     if renames:
         with tqdm(desc="moves", total=renames, leave=False, disable=_disable) as pbar:
-            for orig, new in get_renames(rev, last):
+            for orig, new in get_renames(rev, last=last):
                 move(orig, new)
                 iters += 1
                 if iters % 50 == 0:
-                    record_all(rev, f"move({count:03d})")
+                    record_all(rev, postfix=f"move({count:03d})")
                     count += 1
                 pbar.update()
     wipe()
     checkout(rev)
-    record_all(rev, last)
+    record_all(rev, last=last)
 
 
 def get_lastest_rev():
@@ -418,14 +418,14 @@ def less_boring():
     disable.rename(bfile)
 
 
-def transfer(gen, count, last=None):
+def transfer(gen, count, *, last=None):
     """Transfer the git-commits to darcs."""
     try:
         with tqdm(desc="commits", total=count, disable=_disable) as pbar:
             records = 0
             for rev in gen:
                 if git_try_fast_forward(rev, last):
-                    record_revision(rev, last)
+                    record_revision(rev, last=last)
                     last = rev
                     recorded = True
                     records += 1
@@ -435,7 +435,7 @@ def transfer(gen, count, last=None):
                 if _shutdown:
                     sys.exit(0)
             if not recorded:
-                record_revision(rev, last)
+                record_revision(rev, last=last)
                 last = rev
     except Exception:
         print(f"Failed on revision {last}")
@@ -459,7 +459,7 @@ def import_range(rbase):
     checkout(rbase)
     with less_boring():
         record_all(rbase)
-        transfer(gen, count, rbase)
+        transfer(gen, count, last=rbase)
 
 
 def import_one():
