@@ -154,13 +154,16 @@ def darcs_clone(source, destination):
     run(["darcs", "clone", "--no-working-dir", source, destination], check=True)
 
 
-def git_try_fast_forward(rev):
+def git_try_fast_forward(last, rev):
     """Clone git-repo."""
     try:
-        run(["git", "merge", "--ff-only", rev], check=True)
+        run(["git", "merge", "--no-commit", "--ff-only", rev], check=True)
         return True
     except CalledProcessError:
         return False
+    finally:
+        wipe()
+        checkout(last)
 
 
 def git_clone(source, destination):
@@ -218,16 +221,6 @@ def get_head():
     if _verbose:
         print(head)
     return head
-
-
-def get_rename_diff(rev):
-    """Request the renames of a commit from git."""
-    with Popen(
-        ["git", "show", "--diff-filter=R", rev],
-        stdout=PIPE,
-    ) as res:
-        while line := res.stdout.readline():
-            yield line.decode("UTF-8").strip()
 
 
 def record_all(rev, postfix=""):
@@ -301,13 +294,30 @@ class RenameDiffState:
     ORIG_FOUND = 3
 
 
-def get_renames(rev):
+def get_rename_diff(last, rev):
+    """Request the renames of a commit from git."""
+    assert last != rev
+    if last is None:
+        action = "show"
+        range = rev
+    else:
+        action = "diff"
+        range = f"{last}..{rev}"
+    with Popen(
+        ["git", action, "--diff-filter=R", range],
+        stdout=PIPE,
+    ) as res:
+        while line := res.stdout.readline():
+            yield line.decode("UTF-8").strip()
+
+
+def get_renames(last, rev):
     """Parse the renames from a git-rename-diff."""
     s = RenameDiffState
     state = s.INIT
     orig = ""
     new = ""
-    for line in get_rename_diff(rev):
+    for line in get_rename_diff(last, rev):
         if state == s.INIT:
             if line.startswith("diff --git"):
                 state = s.IN_DIFF
@@ -325,17 +335,17 @@ def get_renames(rev):
                 state = s.IN_DIFF
 
 
-def record_revision(rev):
+def record_revision(last, rev):
     """Record a revision, pre-record moves if there are any."""
     iters = 0
     count = 0
     renames = 0
-    for _ in get_renames(rev):
+    for _ in get_renames(last, rev):
         renames += 1
 
     if renames:
         with tqdm(desc="moves", total=renames, leave=False, disable=_disable) as pbar:
-            for orig, new in get_renames(rev):
+            for orig, new in get_renames(last, rev):
                 move(orig, new)
                 iters += 1
                 if iters % 50 == 0:
@@ -343,7 +353,7 @@ def record_revision(rev):
                     count += 1
                 pbar.update()
     wipe()
-    checkout("HEAD")
+    checkout(rev)
     record_all(rev)
 
 
@@ -400,22 +410,23 @@ def transfer(gen, count):
                 recorded = False
                 if first:
                     first = False
-                    record_revision(rev)
+                    record_revision(last, rev)
+                    last = rev
                     recorded = True
                 else:
-                    if git_try_fast_forward(rev):
-                        record_revision(rev)
+                    if git_try_fast_forward(last, rev):
+                        record_revision(last, rev)
+                        last = rev
                         recorded = True
                         records += 1
                         if records % 100 == 0:
                             checkpoint(last)
                 pbar.update()
-                last = rev
                 if _shutdown:
                     sys.exit(0)
-            assert last == rev
             if not recorded:
-                record_revision(last)
+                record_revision(last, rev)
+                last = rev
     except Exception:
         print(f"Failed on revision {last}")
         raise
