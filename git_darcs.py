@@ -50,7 +50,7 @@ class Popen(SPOpen):
             stderr = _devnull
         if not stdin and "input" not in kwargs:
             stdin = _devnull
-        super().__init__(*args, stdin=stdin, **kwargs)
+        super().__init__(*args, stderr=stderr, stdin=stdin, **kwargs)
 
 
 def run(*args, stdout=None, stderr=None, stdin=None, **kwargs):
