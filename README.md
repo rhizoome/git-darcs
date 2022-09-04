@@ -9,8 +9,8 @@ Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and
 it will try to import each commit into darcs. git-darcs will walk a truly linear
 git-history, but it has some caveats. See: `Linearized history`. In a typical
-gitlab/github workflow, it almost only imports merge-commits with the changes
-introduced by that merge-commit.
+gitlab/github workflow, it almost only imports merge-commits containing the
+changes introduced by that merge-commit.
 
 By default the first import is shallow, only importing the current git-commit.
 If you want to import the whole history use `git-darcs update --no-shallow`,
@@ -22,17 +22,18 @@ On the first import you can also supply a custom base-commit `git-darcs update
 
 The options `base` and `shallow` are ignored after the first import.
 
-Use a global `gitignore` to ignore `_darcs` in all your depositories.
+Use a [global `gitignore`](https://gist.github.com/subfuzion/db7f57fff2fb6998a16c) to ignore
+`_darcs` in all your depositories.
 
 With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
-duplicated on disk.
+duplicated on disk. To create git patches from my working-repositories I use
+`darcs rebase suspend` and `git commit -a -v`.
 
-⚠️ **NOTE**: The tool is intentionally very minimal. It is for devs, they can read tracebacks
-or change the code to fit better. To create git patches from my
-working-repositories I use `darcs rebase suspend` and `git commit -a -v`. There
-are no pytests, yet, just me using it and having done a lot of tests to find the
-optimal linearized history.
+⚠️ **NOTE**: The tool is intentionally very minimal. It is for devs, they can
+read tracebacks or change the code to fit better. There are no pytests, yet,
+just me using it and having done a lot of tests to find the optimal linearized
+history.
 
 But why
 -------
@@ -89,7 +90,7 @@ Options:
   --help  Sow this message and exit.
 
 Commands:
-  clone   Locally clone a tracking repository to get a working-repository.
+  clone   Locally clone a tracking-repository to get a working-repository.
   update  Incremental import o git into darcs.
 ```
 
@@ -104,7 +105,7 @@ Usage: git-darcs update [OPTIONS]
 
 Options:
   -v, --verbose / -nv, --no-verbose
-  -w, --warn / -nw, --no-warn     Warn that repository will be cleaned
+  -w, --warn / -nw, --no-warn     Warn that repository will be cleared
   -b, --base TEXT                 On first update import from (commit-ish)
   -s, --shallow / -ns, --no-shallow
                                   On first update only import current commit

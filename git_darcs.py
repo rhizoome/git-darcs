@@ -397,7 +397,7 @@ def checkpoint(rev):
 
 def warning():
     """Print a warning that git-darcs is going to wipe uncommitted change."""
-    print("Use git-darcs on an extra tracking repository.")
+    print("Use git-darcs on an extra tracking-repository.")
     print("git-darcs WILL CLEAR ALL YOUR WORK THAT IS NOT COMMITED!")
     print("Use -nw to skip this warning.\n")
     print("Press enter to continue")
@@ -524,7 +524,7 @@ def clone(source, destination, verbose):
     "-w/-nw",
     "--warn/--no-warn",
     default=True,
-    help="Warn that repository will be cleaned",
+    help="Warn that repository will be cleared",
 )
 @click.option(
     "--base",
