@@ -280,7 +280,7 @@ $> git log --oneline --graph
 ```
 
 git-darcs wasn't able to fast-forward branch 'b', so 969ad57 contains all the
-move done in `b`: `bb1` will skip to `bb3` directly, as expected.
+moves done in `b`: `bb1` will skip to `bb3` directly, as expected.
 
 ```
 * eef24d8 end > end0
