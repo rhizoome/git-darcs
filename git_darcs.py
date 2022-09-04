@@ -15,6 +15,8 @@ from click import ClickException
 from tqdm import tqdm
 
 _uuid = "_b531990e-3187-4b52-be1f-6e4d4d1e40c9"
+_darcs_comment = Path("_darcs", _uuid)
+_env_comment = {"EDITOR": f"mv {_darcs_comment}", "VISUAL": f"mv {_darcs_comment}"}
 _isatty = sys.stdout.isatty()
 _verbose = False
 _devnull = DEVNULL
@@ -197,7 +199,7 @@ def author(rev):
     return msg
 
 
-def message(rev):
+def oneline(rev):
     """Get the short-message of a commit from git."""
     res = run(
         ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
@@ -223,13 +225,19 @@ def get_head():
     return head
 
 
-def record_all(rev, postfix=""):
+def record_all(rev, postfix=None, comments=None):
     """Record all change onto the darcs-repo."""
-    msg = message(rev)
+    msg = oneline(rev)
     by = author(rev)
     if postfix:
         msg = f"{msg} {postfix}"
+    if comments:
+        msg = f"{msg}\n\n{comments}"
+    with _darcs_comment.open("w", encoding="UTF-8") as f:
+        f.write(msg)
     try:
+        env = dict(os.environ)
+        env.update(_env_comment)
         res = run(
             [
                 "darcs",
@@ -237,13 +245,15 @@ def record_all(rev, postfix=""):
                 "--look-for-adds",
                 "--no-interactive",
                 "--ignore-times",
+                "--edit-long-comment",
                 "--author",
                 by,
                 "--name",
-                msg,
+                "",
             ],
             check=True,
             stdout=PIPE,
+            env=env,
         )
         if _verbose:
             print(res.stdout.decode("UTF-8").strip())

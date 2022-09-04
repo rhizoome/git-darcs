@@ -10,7 +10,7 @@ keywords = ["git", "darcs", "import", "incremental"]
 readme = "README.md"
 classifiers = [
     "Environment :: Console",
-    "Operating System :: OS Independent",
+    "Operating System :: POSIX",
     "Topic :: Software Development",
     "Topic :: Software Development :: Version Control",
 ]
