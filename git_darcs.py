@@ -42,7 +42,7 @@ def handle_shutdown():
 
 
 class Popen(SPOpen):
-    """Inject default into Popen."""
+    """Inject defaults into Popen."""
 
     def __init__(self, *args, stderr=None, stdin=None, **kwargs):
         """Inject default into Popen."""
