@@ -23,7 +23,7 @@ On the first import you can also supply a custom base-commit `git-darcs update
 The options `base` and `shallow` are ignored after the first import.
 
 Use a [global `gitignore`](https://gist.github.com/subfuzion/db7f57fff2fb6998a16c) to ignore
-`_darcs` in all your depositories.
+`_darcs` in all your repositories.
 
 With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
@@ -56,13 +56,13 @@ For darcs beginners
 * `_darcs/pref/boring` is the equivalent of `.gitignore`, but has quite a wide
   definition of boring by default
 
-Darcs does not handle `chmod` or symbolic-links. The easiest way to workaround
-this, is letting `git` do the work. I have two git/darcs repositories for each
-project.
+Darcs does not handle `chmod` or symbolic links. The easiest way to work around
+this is by letting `git` do the work. I have two git/darcs repositories for each
+project:
 
-* `project` (the repository I work in) containing a `.git` and a `_darcs`
+* `project` (the repository I work in) containing a `.git` and a `_darcs` folder
 * `project-tracking` (the repository that tracks changes from upstrream,
-   also containing a `.git` and a `_darcs`
+   also containing a `.git` and a `_darcs` folder
 
 I then pull new darcs-patches from `project-tracking` into `project`. Once my
 the changes are in upstream, I obliterate everything to the checkpoint (tag) I
