@@ -5,10 +5,10 @@ git-darcs - Incremental import of git into darcs
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
-See "Linearized history" for the big problem with this approach. The tool is
-meant to temporarly bring in changes from upstream, so we can work/test against
-these. So the broken history doesn't really matter to me, as long as the
-resulting state is correct, which it is (I tested that a lot).
+See "Linearized history" for the problem with this approach. The tool is meant
+to temporarly bring in changes from upstream, so we can work/test against these.
+So the broken history doesn't really matter to me, as long as the resulting
+state is correct, which it is (I tested that a lot).
 
 Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and

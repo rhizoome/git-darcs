@@ -154,6 +154,15 @@ def darcs_clone(source, destination):
     run(["darcs", "clone", "--no-working-dir", source, destination], check=True)
 
 
+def git_try_fast_forward(rev):
+    """Clone git-repo."""
+    try:
+        run(["git", "merge", "--ff-only", rev], check=True)
+        return True
+    except CalledProcessError:
+        return False
+
+
 def git_clone(source, destination):
     """Clone git-repo."""
     run(["git", "clone", source, destination], check=True)
@@ -334,7 +343,7 @@ def record_revision(rev):
                     count += 1
                 pbar.update()
     wipe()
-    checkout(rev)
+    checkout("HEAD")
     record_all(rev)
 
 
@@ -385,16 +394,28 @@ def transfer(gen, count):
     try:
         last = None
         with tqdm(desc="commits", total=count, disable=_disable) as pbar:
-            iters = 0
+            records = 0
+            first = True
             for rev in gen:
-                record_revision(rev)
+                recorded = False
+                if first:
+                    first = False
+                    record_revision(rev)
+                    recorded = True
+                else:
+                    if git_try_fast_forward(rev):
+                        record_revision(rev)
+                        recorded = True
+                        records += 1
+                        if records % 100 == 0:
+                            checkpoint(last)
                 pbar.update()
                 last = rev
-                iters += 1
-                if iters % 100 == 0:
-                    checkpoint(last)
                 if _shutdown:
                     sys.exit(0)
+            assert last == rev
+            if not recorded:
+                record_revision(last)
     except Exception:
         print(f"Failed on revision {last}")
         raise
