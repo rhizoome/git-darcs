@@ -156,7 +156,7 @@ $> git log --oneline --graph
 * 44d8cd1 start
 ```
 
-becomes this darcs-history Note that the moves correspond to the moves I logged,
+becomes this darcs-history. Note that the moves correspond to the moves I logged,
 there is never a `rmfile` or a `move` in the wrong direction. Here darcs
 couldn't record branch `a` or `b` so all the changes appear in the patches
 corresponding to the merge-commits.
