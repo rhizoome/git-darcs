@@ -5,7 +5,10 @@ git-darcs - Incremental import of git into darcs
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
-See "Linearized history" for the big problem with this approach.
+See "Linearized history" for the big problem with this approach. The tool is
+meant to temporarly bring in changes from upstream, so we can work/test against
+these. So the broken history doesn't really matter to me, as long as the
+resulting state is correct, which it is (I tested that a lot).
 
 Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and
@@ -193,3 +196,7 @@ patch 46ac34b0119697fdae7e32329554367c30627b10
   * c40c0c9 start
     addfile ./start
 ```
+
+The alternative is writing clever code that follows the tree structure and at
+each fork follow one branch until a merge, then suspend, follow the other
+branch. I 100% certain this also means we have to deal with conflichts.
