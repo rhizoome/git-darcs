@@ -581,6 +581,10 @@ def update(verbose, base, warn, shallow):
     branch = get_current_branch()
     failed = True
     try:
+        try:
+            checkout(".")
+        except CalledProcessError:
+            pass
         if do_one:
             import_one()
         else:
