@@ -26,9 +26,11 @@ With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
 duplicated on disk.
 
-The tool is intentionally very minimal, it is for devs. They can read tracebacks
+**NOTE**: The tool is intentionally very minimal, it is for devs. They can read tracebacks
 or change the code to fit better. To create git patches from my
-working-repositories I use `darcs rebase suspend` and `git commit -a -v`.
+working-repositories I use `darcs rebase suspend` and `git commit -a -v`. There
+are no pytests, yet, just me using it and having done a lot of tests to find the
+optimal linearized history.
 
 But why
 -------
