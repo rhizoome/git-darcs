@@ -8,8 +8,8 @@ git-darcs - Incremental import of git into darcs
 Just call `git-darcs update`, it will import the current git-commit into darcs.
 If you get new commits eg. using `git pull`, you can call `git-darcs update` and
 it will try to import each commit into darcs. git-darcs will walk a truly linear
-git-history, but it has some caveats. See: `Linearized history`. In typical
-gitlab/github workflow it almost only import merge-commits, with the changes
+git-history, but it has some caveats. See: `Linearized history`. In a typical
+gitlab/github workflow, it almost only imports merge-commits with the changes
 introduced by that merge-commit.
 
 By default the first import is shallow, only importing the current git-commit.
