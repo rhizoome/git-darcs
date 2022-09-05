@@ -435,24 +435,19 @@ def transfer(gen, count, *, last=None):
                 if git_try_fast_forward(rev, last):
                     record_revision(rev, last=last)
                     last = rev
-                    recorded = True
                     records += 1
                     if records % 100 == 0:
                         checkpoint(last)
                 pbar.update()
                 if _shutdown:
                     sys.exit(0)
-            if not recorded:
-                record_revision(rev, last=last)
-                last = rev
     except Exception:
         print(f"Failed on revision {last}")
         raise
-    finally:
-        checkpoint(last)
+    return last
 
 
-def import_range(rbase):
+def import_range(rbase, *, from_checkpoint=False):
     """Run the transfer to darcs."""
     rhead = get_head()
     if rbase == rhead:
@@ -466,8 +461,16 @@ def import_range(rbase):
     wipe()
     checkout(rbase)
     with less_boring():
-        record_all(rbase)
-        transfer(gen, count, last=rbase)
+        try:
+            last = rbase
+            if not from_checkpoint:
+                record_all(rbase)
+            last = transfer(gen, count, last=last)
+            if last != rhead:
+                checkout(rhead)
+                record_all(rhead)
+        finally:
+            checkpoint(rhead)
 
 
 def import_one():
@@ -559,7 +562,9 @@ def update(verbose, base, warn, shallow):
     if not Path("_darcs").exists():
         initialize()
     rbase = get_lastest_rev()
+    from_checkpoint = False
     if rbase:
+        from_checkpoint = True
         do_one = False
         if base:
             print("Found git-checkpoint, ignoring base-option")
@@ -588,7 +593,7 @@ def update(verbose, base, warn, shallow):
         if do_one:
             import_one()
         else:
-            import_range(rbase)
+            import_range(rbase, from_checkpoint=from_checkpoint)
         failed = False
     finally:
         if branch:
