@@ -380,7 +380,7 @@ def record_revision(rev, *, last=None):
                     record_all(rev, postfix=f"move({count:03d})")
                     count += 1
                 pbar.update()
-    wipe()
+        wipe()
     checkout(rev)
     record_all(rev, last=last)
 
