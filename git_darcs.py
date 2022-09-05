@@ -247,7 +247,7 @@ def record_all(rev, *, last=None, postfix=None, comments=None):
     by = author(rev)
     if postfix:
         msg = f"{msg} {postfix}"
-    if comments:
+    elif comments:
         msg = f"{msg}\n\n{comments}"
     with _darcs_comment.open("w", encoding="UTF-8") as f:
         f.write(msg)
