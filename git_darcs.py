@@ -5,6 +5,7 @@ import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from shutil import rmtree
 from subprocess import DEVNULL, PIPE, CalledProcessError
 from subprocess import Popen as SPOpen
 from subprocess import run as srun
@@ -153,7 +154,7 @@ def get_tags():
 
 def darcs_clone(source, destination):
     """Clone git-repo."""
-    run(["darcs", "clone", "--no-working-dir", source, destination], check=True)
+    run(["darcs", "clone", source, destination], check=True)
 
 
 def git_try_fast_forward(rev, last):
@@ -525,7 +526,7 @@ def clone(source, destination, verbose):
     repo_source = Path(darcs_dest, "_darcs")
     repo_dest = Path(destination, "_darcs")
     repo_source.rename(repo_dest)
-    darcs_dest.rmdir()
+    rmtree(darcs_dest, ignore_errors=True)
     os.chdir(destination)
     relink()
 
