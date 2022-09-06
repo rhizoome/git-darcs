@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git-darcs"
-version = "0.7.4"
+version = "0.7.5"
 description = "Incremental import of git into darcs"
 authors = ["Jean-Louis Fuchs <jean-louis.fuchs@adfinis.com>"]
 license = "AGPL-3.0-or-later"
