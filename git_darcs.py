@@ -163,7 +163,7 @@ def checkout(rev):
 
 
 def is_ancestor(rev, last):
-    """Check if revisiion can fast-forward"""
+    """Check if revisiion can fast-forward."""
     try:
         run(["git", "merge-base", "--is-ancestor", last, rev], check=True)
         return True
