@@ -153,24 +153,22 @@ def get_tags():
 
 
 def darcs_clone(source, destination):
-    """Clone git-repo."""
+    """Clone darcs-repo."""
     run(["darcs", "clone", source, destination], check=True)
-
-
-def git_try_fast_forward(rev, last):
-    """Clone git-repo."""
-    try:
-        run(["git", "merge", "--no-commit", "--ff-only", rev], check=True)
-        wipe()
-        checkout(last)
-        return True
-    except CalledProcessError:
-        return False
 
 
 def git_clone(source, destination):
     """Clone git-repo."""
     run(["git", "clone", source, destination], check=True)
+
+
+def is_ancestor(rev, last):
+    """Check if revisiion can fast-forward"""
+    try:
+        run(["git", "merge-base", "--is-ancestor", last, rev], check=True)
+        return True
+    except CalledProcessError:
+        return False
 
 
 def get_current_branch():
@@ -433,7 +431,8 @@ def transfer(gen, count, *, last=None):
         with tqdm(desc="commits", total=count, disable=_disable) as pbar:
             records = 0
             for rev in gen:
-                if git_try_fast_forward(rev, last):
+                # Check if fast-forward is possible
+                if is_ancestor(rev, last):
                     record_revision(rev, last=last)
                     last = rev
                     records += 1
