@@ -65,26 +65,6 @@ def run(*args, stdout=None, stderr=None, stdin=None, **kwargs):
     return srun(*args, stdout=stdout, stderr=stderr, stdin=stdin, **kwargs)
 
 
-def wipe():
-    """Completely clean the git-repo except `_darcs`."""
-    run(
-        ["git", "reset"],
-        check=True,
-    )
-    run(
-        ["git", "clean", "-xdf", "--exclude", "/_darcs"],
-        check=True,
-    )
-
-
-def checkout(rev):
-    """Checkout a git-commit."""
-    run(
-        ["git", "checkout", rev],
-        check=True,
-    )
-
-
 def revert():
     """Revert recorded changes in darcs."""
     run(["darcs", "revert", "--no-interactive"])
@@ -160,6 +140,26 @@ def darcs_clone(source, destination):
 def git_clone(source, destination):
     """Clone git-repo."""
     run(["git", "clone", source, destination], check=True)
+
+
+def wipe():
+    """Completely clean the git-repo except `_darcs`."""
+    run(
+        ["git", "reset"],
+        check=True,
+    )
+    run(
+        ["git", "clean", "-xdf", "--exclude", "/_darcs"],
+        check=True,
+    )
+
+
+def checkout(rev):
+    """Checkout a git-commit."""
+    run(
+        ["git", "checkout", rev],
+        check=True,
+    )
 
 
 def is_ancestor(rev, last):
