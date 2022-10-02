@@ -159,6 +159,7 @@ def darcs_clone(source, destination):
 
 
 def get_patches(source, args):
+    """Get patches from darcs."""
     res = run(
         ["darcs", "pull", "--dry-run", "--xml-output"] + args + [source],
         stdout=PIPE,
@@ -169,6 +170,7 @@ def get_patches(source, args):
 
 
 def show_full_patch(source, patch):
+    """Show full patch with darcs."""
     run(
         ["darcs", "log", "-i", "--repodir", source, "-h", patch],
         stdout=sys.stdout,
@@ -574,7 +576,7 @@ def prepare_update(base, shallow):
     return rbase, from_checkpoint, do_one
 
 
-def run_update(rbase, do_one, from_checkpoint):
+def run_update(rbase, from_checkpoint, do_one):
     """Run conversion loop."""
     branch = get_current_branch()
     failed = True
@@ -598,6 +600,7 @@ def run_update(rbase, do_one, from_checkpoint):
 
 
 def ask(question, choice, *, text="", state="", help=""):
+    """Ask a question on the terminal."""
     key = "?"
     if text:
         print(text)
@@ -612,7 +615,10 @@ def ask(question, choice, *, text="", state="", help=""):
 
 
 class Patch:
+    """Represents a darcs-patch."""
+
     def __init__(self, source, patch, *, index=None, of=None):
+        """Dear flake8 this is a init function."""
         self.source = source
         self.index = index
         self.of = of
@@ -629,6 +635,7 @@ class Patch:
         self.pull = None
 
     def short(self):
+        """Get a short description of the patch."""
         return f"""
 {self.chash}
 From: {self.author}
@@ -637,15 +644,18 @@ Subject: {self.subject}
         """.strip()
 
     def long(self):
+        """Get a longer description of the patch."""
         if self.comment:
             return f"{self.short()}\n\n{self.comment}"
         else:
             return self.short()
 
     def full(self):
+        """Show the full patch."""
         show_full_patch(self.source, self.hash)
 
     def ask(self):
+        """Ask if I should pull this patch."""
         key = "l"
         text = self.short()
         while key in ("l", "f"):
@@ -673,12 +683,16 @@ Subject: {self.subject}
 
 
 class Pull:
+    """Contains state for the pull-questions."""
+
     def __init__(self, source, args):
+        """Dear flake8 this is a init function."""
         self.source = source
         self.args = args
         self.patches = get_patches(source, args)
 
     def pull(self):
+        """Pull patches."""
         decide = list(self.patches)
         pull = []
         while decide:
@@ -700,11 +714,13 @@ class Pull:
                     sys.exit(1)
 
     def pull_patch(self, patch, pull):
+        """Pull a single patch."""
         patch = Patch(self.source, patch)
         patch.pull = pull
         return patch
 
     def ask_patch(self, patch, index, of):
+        """Ask to pull a single patch."""
         patch = Patch(self.source, patch, index=index, of=of)
         key = patch.ask()
         return patch, key
