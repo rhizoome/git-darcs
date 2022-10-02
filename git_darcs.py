@@ -2,6 +2,7 @@
 
 import os
 import sys
+import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +14,8 @@ from threading import Thread
 
 import click
 from click import ClickException
+from colorama import Fore, Style, init
+from readchar import readkey
 from tqdm import tqdm
 
 _uuid = "_b531990e-3187-4b52-be1f-6e4d4d1e40c9"
@@ -23,6 +26,21 @@ _verbose = False
 _devnull = DEVNULL
 _disable = None
 _shutdown = False
+_darcs_date = "%Y%m%d%H%M%S"
+_pull_question = "Shall I pull this patch"
+_pull_help = """
+y: pull this patch
+n: don't pull it
+w: decide later
+
+a: pull all remaining patches
+i: don't pull remaining patches
+
+l: show full log message
+f: show full patch
+
+c: cancel without pulling
+"""
 
 _boring = """
 # git
@@ -134,7 +152,30 @@ def get_tags():
 
 def darcs_clone(source, destination):
     """Clone darcs-repo."""
-    run(["darcs", "clone", source, destination], check=True)
+    run(
+        ["darcs", "clone", source, destination],
+        check=True,
+    )
+
+
+def get_patches(source, args):
+    res = run(
+        ["darcs", "pull", "--dry-run", "--xml-output"] + args + [source],
+        stdout=PIPE,
+        check=True,
+    )
+    tree = ET.fromstring(res.stdout.decode("UTF-8"))
+    return tree
+
+
+def show_full_patch(source, patch):
+    run(
+        ["darcs", "log", "-i", "--repodir", source, "-h", patch],
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        input=b"y",
+        check=True,
+    )
 
 
 def git_clone(source, destination):
@@ -502,6 +543,173 @@ def setup(warn, verbose):
         _disable = True
 
 
+def prepare_update(base, shallow):
+    """Check repo, arguments, find base and setup shutdown."""
+    if not Path(".git").exists():
+        raise ClickException("Please run git-darcs in the root of your git-repo.")
+    if not Path("_darcs").exists():
+        initialize()
+    rbase = get_lastest_rev()
+    from_checkpoint = False
+    if rbase:
+        from_checkpoint = True
+        do_one = False
+        if base:
+            print("Found git-checkpoint, ignoring base-option")
+        if shallow is True:
+            print("Found git-checkpoint, ignoring shallow-option")
+    else:
+        do_one = True
+        if base:
+            do_one = False
+            rbase = base
+            if shallow is True:
+                print("Found base-option, ignoring shallow-option")
+        if shallow is False:
+            do_one = False
+            rbase = get_base()
+    if _isatty:
+        _thread = Thread(target=handle_shutdown, daemon=True)
+        _thread.start()
+    return rbase, from_checkpoint, do_one
+
+
+def run_update(rbase, do_one, from_checkpoint):
+    """Run conversion loop."""
+    branch = get_current_branch()
+    failed = True
+    try:
+        try:
+            checkout(".")
+        except CalledProcessError:
+            pass
+        if do_one:
+            import_one()
+        else:
+            import_range(rbase, from_checkpoint=from_checkpoint)
+        failed = False
+    finally:
+        if branch:
+            if failed and _verbose:
+                print(f"Not restoring to `{branch}` in verbose-mode failure.")
+            else:
+                wipe()
+                checkout(branch)
+
+
+def ask(question, choice, *, text="", state="", help=""):
+    key = "?"
+    if text:
+        print(text)
+    while key in ("h", "?"):
+        sys.stdout.write(f"{question}? {state}  [{choice}], or ? for more options: ")
+        sys.stdout.flush()
+        key = readkey()
+        print()
+        if key in ("h", "?"):
+            print(help)
+    return key
+
+
+class Patch:
+    def __init__(self, source, patch, *, index=None, of=None):
+        self.source = source
+        self.index = index
+        self.of = of
+        self.patch = patch
+        fields = patch.attrib
+        self.author = fields["author"]
+        self.hash = fields["hash"]
+        self.chash = Fore.CYAN + f"patch {self.hash}" + Style.RESET_ALL
+        self.date = datetime.strptime(fields["date"], _darcs_date)
+        self.subject = patch.find("name").text
+        self.comment = patch.find("comment").text
+        if self.comment.startswith("Ignore-this: "):
+            self.comment = ""
+        self.pull = None
+
+    def short(self):
+        return f"""
+{self.chash}
+From: {self.author}
+Date: {self.date}
+Subject: {self.subject}
+        """.strip()
+
+    def long(self):
+        if self.comment:
+            return f"{self.short()}\n\n{self.comment}"
+        else:
+            return self.short()
+
+    def full(self):
+        show_full_patch(self.source, self.hash)
+
+    def ask(self):
+        key = "l"
+        text = self.short()
+        while key in ("l", "f"):
+            key = ask(
+                _pull_question,
+                "ynwasc",
+                text=text,
+                state=f"{self.index + 1}/{self.of}",
+                help=_pull_help,
+            )
+            text = ""
+            if key == "l":
+                print(self.long())
+            elif key == "f":
+                self.full()
+            elif key == "y":
+                self.pull = True
+            elif key == "n":
+                self.pull = False
+            elif key == "a":
+                self.pull = True
+            elif key == "i":
+                self.pull = False
+        return key
+
+
+class Pull:
+    def __init__(self, source, args):
+        self.source = source
+        self.args = args
+        self.patches = get_patches(source, args)
+
+    def pull(self):
+        decide = list(self.patches)
+        pull = []
+        while decide:
+            of = len(decide)
+            key = ""
+            for index, xml in enumerate(list(decide)):
+                if key == "i":
+                    patch = self.pull_patch(xml, False)
+                elif key == "a":
+                    patch = self.pull_patch(xml, True)
+                else:
+                    patch, key = self.ask_patch(xml, index, of)
+                if patch.pull is not None:
+                    decide.remove(xml)
+                    if patch.pull:
+                        pull.append(patch)
+                if key == "c":
+                    print("\nCancel pull")
+                    sys.exit(1)
+
+    def pull_patch(self, patch, pull):
+        patch = Patch(self.source, patch)
+        patch.pull = pull
+        return patch
+
+    def ask_patch(self, patch, index, of):
+        patch = Patch(self.source, patch, index=index, of=of)
+        key = patch.ask()
+        return patch, key
+
+
 @click.group()
 def main():
     """Click entrypoint."""
@@ -550,55 +758,28 @@ def clone(source, destination, verbose):
     default=None,
     help="On first update only import current commit",
 )
-def update(verbose, base, warn, shallow):
+def update(verbose, warn, base, shallow):
     """Incremental import of git into darcs.
 
     By default it imports a shallow copy (the current commit). Use `--no-shallow`
     to import the complete history.
     """
     setup(warn, verbose=verbose)
-    if not Path(".git").exists():
-        raise ClickException("Please run git-darcs in the root of your git-repo.")
+    run_update(*prepare_update(base, shallow))
+
+
+@main.command()
+@click.option("-v/-nv", "--verbose/--no-verbose", default=False)
+@click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
+@click.argument("darcs", nargs=-1)
+def pull(verbose, source, darcs):
+    """Pull from source darcs-repository into a tracking repository.
+
+    A tracking repository is created by `git darcs update` and contains a git- and a
+    darcs-repository. Arguments after `--` are passed to `darcs pull`.
+    """
+    init()
+    setup(False, verbose=verbose)
     if not Path("_darcs").exists():
-        initialize()
-    rbase = get_lastest_rev()
-    from_checkpoint = False
-    if rbase:
-        from_checkpoint = True
-        do_one = False
-        if base:
-            print("Found git-checkpoint, ignoring base-option")
-        if shallow is True:
-            print("Found git-checkpoint, ignoring shallow-option")
-    else:
-        do_one = True
-        if base:
-            do_one = False
-            rbase = base
-            if shallow is True:
-                print("Found base-option, ignoring shallow-option")
-        if shallow is False:
-            do_one = False
-            rbase = get_base()
-    if _isatty:
-        _thread = Thread(target=handle_shutdown, daemon=True)
-        _thread.start()
-    branch = get_current_branch()
-    failed = True
-    try:
-        try:
-            checkout(".")
-        except CalledProcessError:
-            pass
-        if do_one:
-            import_one()
-        else:
-            import_range(rbase, from_checkpoint=from_checkpoint)
-        failed = False
-    finally:
-        if branch:
-            if failed and _verbose:
-                print(f"Not restoring to `{branch}` in verbose-mode failure.")
-            else:
-                wipe()
-                checkout(branch)
+        raise ClickException("Please run git-darcs in the root of your darcs-repo.")
+    Pull(source, list(darcs)).pull()
