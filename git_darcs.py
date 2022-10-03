@@ -192,8 +192,11 @@ def get_patches(source, args):
         stdout=PIPE,
         check=True,
     )
-    tree = ET.fromstring(res.stdout.decode("UTF-8"))
-    return tree
+    res = res.stdout.decode("UTF-8").strip()
+    if res.startswith("No remote patches to pull in!"):
+        return ET.fromstring("<root></root>")
+    else:
+        return ET.fromstring(res)
 
 
 def show_full_patch(source, patch):
@@ -771,13 +774,16 @@ class Pull:
         self.args = args
         self.patches_xml = get_patches(source, args)
         self.patches = OrderedDict()  # Legacy support
-        of = len(self.patches_xml)
+        self.of = of = len(self.patches_xml)
         for index, patch in enumerate(self.patches_xml):
             obj = Patch(source, patch, index=index, of=of)
             self.patches[obj.hash] = obj
 
     def pull(self, all=False):
         """Pull patches."""
+        if not self.of:
+            print("No remote patches to pull in!")
+            return
         if all:
             for patch in self.patches.values():
                 patch.pull = True
