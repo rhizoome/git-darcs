@@ -38,15 +38,22 @@ jobs:
       - name: Run integration test
         run: |
           rm -rf _darcs
-          poetry run git-darcs update -nw -v -ns
+          poetry run git-darcs update -nw -v
           darcs show tags | grep -q git-checkpoint
           darcs show tags
           rm -rf _darcs
-          poetry run git-darcs update -nw -v
+          poetry run git-darcs update -nw -v -ns
           darcs show tags | grep -q git-checkpoint
           darcs show tags
           poetry run git-darcs clone . git-darcs-clone -v
           rm -rf git-darcs-clone
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          export gpath="$(pwd)"
+          echo poetry run sh -c "cd ..; mkdir test; cd test; darcs init; git init; git-darcs pull -a -nw -v $gpath"
+          poetry run sh -c "cd ..; mkdir test; cd test; darcs init; git init; git-darcs pull -a -nw -v $gpath"
+          cd ..
+          rm -rf test
       - name: Run black
         run: poetry run black --check .
       - name: Run flake8

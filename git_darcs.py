@@ -69,6 +69,7 @@ def handle_shutdown():
 
 
 def args_print(args):
+    """Print args of executed command."""
     if _verbose:
         args = [str(x) for x in args]
         args = " ".join(args)
@@ -726,6 +727,7 @@ Subject: {self.subject}
         show_full_patch(self.source, self.hash)
 
     def message(self):
+        """Format patch message for git."""
         return f"{self.subject}\n\n{self.comment}".strip()
 
     def ask(self, index, of):
@@ -770,9 +772,13 @@ class Pull:
             obj = Patch(source, patch, index=index, of=of)
             self.patches[obj.hash] = obj
 
-    def pull(self):
+    def pull(self, all=False):
         """Pull patches."""
-        self.decide()
+        if all:
+            for patch in self.patches.values():
+                patch.pull = True
+        else:
+            self.decide()
         pull = [x for x in self.patches.values() if x.pull]
         count = len(pull)
         with tqdm(desc="pull", total=count, disable=_disable) as pbar:
@@ -892,9 +898,15 @@ def update(verbose, warn, base, shallow):
     default=True,
     help="Warn that repository will be cleared",
 )
+@click.option(
+    "-a/-na",
+    "--all/--no-all",
+    default=False,
+    help="Pull all patches",
+)
 @click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
 @click.argument("darcs", nargs=-1)
-def pull(verbose, warn, source, darcs):
+def pull(verbose, all, warn, source, darcs):
     """Pull from source darcs-repository into a tracking repository.
 
     A tracking repository is created by `git darcs update` and contains a git- and a
@@ -912,4 +924,4 @@ def pull(verbose, warn, source, darcs):
         )
 
     init()
-    Pull(source, list(darcs)).pull()
+    Pull(source, list(darcs)).pull(all)
