@@ -25,8 +25,10 @@ Use a [global `gitignore`](https://gist.github.com/subfuzion/db7f57fff2fb6998a16
 
 With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
-duplicated on disk. To create git patches from my working-repositories I use
-`darcs rebase suspend` and `git commit -a -v`.
+duplicated on disk. To create git revision from my working-repositories I
+clone the tracking repo and pull the patches using `git darcs pull <source>`
+into the temporary repo. I push the git-repo and open PR. If the code-review
+requires changes, I update my working-repository and repeat the process.
 
 ⚠️ **NOTE**: The tool is intentionally very minimal. It is for devs, they can
 read tracebacks or change the code to fit better. There are no pytests, yet,
@@ -119,6 +121,21 @@ Usage: git-darcs clone [OPTIONS] SOURCE DESTINATION
 
 Options:
   -v, --verbose / -nv, --no-verbose
+  --help                          Show this message and exit.
+```
+
+```
+Usage: git-darcs pull [OPTIONS] SOURCE [DARCS]...
+
+  Pull from source darcs-repository into a tracking repository.
+
+  A tracking repository is created by `git darcs update` and contains a git-
+  and a darcs-repository. Arguments after `--` are passed to `darcs pull`.
+
+Options:
+  -v, --verbose / -nv, --no-verbose
+  -w, --warn / -nw, --no-warn     Warn that repository will be cleared
+  -a, --all / -na, --no-all       Pull all patches
   --help                          Show this message and exit.
 ```
 
