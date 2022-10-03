@@ -4,10 +4,6 @@ git-darcs - Incremental import of git into darcs
 TODO
 ----
 
-- Reset darcs and git to last checkpoint (obliterate and reset --hard)
-- --all
-- Second ask
-
 [![Test](https://github.com/ganwell/git-darcs/actions/workflows/test.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/test.yml) [![CodeQL](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml)
 
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)

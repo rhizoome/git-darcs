@@ -223,9 +223,12 @@ def pull_patch(source, hash):
     )
 
 
-def git_add():
+def git_add(args=None):
     """Add changes to git."""
-    run(["git", "add", "."], check=True)
+    if args is None:
+        run(["git", "add", "."], check=True)
+    else:
+        run(["git", "add"] + args, check=True)
 
 
 def git_commit(message):
@@ -538,6 +541,7 @@ def ignore_darcs():
     if old:
         with bfile.open("wb") as f:
             f.write(old)
+        git_add([".gitignore"])
 
 
 def transfer(gen, count, *, last=None):
@@ -781,6 +785,17 @@ class Pull:
             self.decide()
         pull = [x for x in self.patches.values() if x.pull]
         count = len(pull)
+        if not all:
+            key = ask(f"Shall I pull {count} patches", "yn")
+            if key == "n":
+                print("Cancel pull")
+                sys.exit(1)
+            if key == "q":
+                print("Cancel pull")
+                sys.exit(1)
+            if key == "c":
+                print("Cancel pull")
+                sys.exit(1)
         with tqdm(desc="pull", total=count, disable=_disable) as pbar:
             for patch in pull:
                 pull_patch(self.source, patch.hash)
@@ -800,7 +815,7 @@ class Pull:
                 count += 1
                 patch.pull = True
         if count:
-            print(f"Select {count} dependent patches")
+            print(Fore.RED + f"Select {count} dependent patches" + Style.RESET_ALL)
 
     def decide(self):
         """Decide patches to pull."""
@@ -808,27 +823,32 @@ class Pull:
         while decide:
             key = None
             of = len(decide)
+            for index, (hash, patch) in enumerate(OrderedDict(decide).items()):
+                key = patch.ask(index, of)
+                if patch.pull is not None:
+                    if patch.pull:
+                        self.pull_depends(hash)
+                    decide.pop(hash)
+                if key == "a":
+                    break
+                elif key == "i":
+                    break
+                elif key == "c":
+                    print("Cancel pull")
+                    sys.exit(1)
+                elif key == "q":
+                    print("Cancel pull")
+                    sys.exit(1)
+
+            of = len(decide)
             with tqdm(desc="resolve", total=of, disable=_disable) as pbar:
-                pbar.disable = True
                 for index, (hash, patch) in enumerate(OrderedDict(decide).items()):
-                    if key == "i":
-                        pbar.disable = _disable
-                        patch.pull = False
-                    elif key == "a":
-                        pbar.disable = _disable
+                    if key == "a":
                         patch.pull = True
-                    elif patch.pull is None:
-                        key = patch.ask(index, of)
-                    if patch.pull is not None:
-                        if patch.pull:
-                            self.pull_depends(hash)
-                        decide.pop(hash)
-                    if key == "c":
-                        print("Cancel pull")
-                        sys.exit(1)
-                    elif key == "q":
-                        print("Cancel pull")
-                        sys.exit(1)
+                        self.pull_depends(hash)
+                    elif key == "i":
+                        patch.pull = False
+                    decide.pop(hash)
                     pbar.update()
 
 
