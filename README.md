@@ -27,7 +27,7 @@ With `git-darcs clone <source> <destination>` you can clone a darcs/git dual
 repository locally. Both git and darcs will make sure no history-data is
 duplicated on disk. To create git revision from my working-repositories I
 clone the tracking repo and pull the patches using `git darcs pull <source>`
-into the temporary repo. I push the git-repo and open PR. If the code-review
+into the temporary repo. I push the git-branch and open PR. If the code-review
 requires changes, I update my working-repository and repeat the process.
 
 ⚠️ **NOTE**: The tool is intentionally very minimal. It is for devs, they can
