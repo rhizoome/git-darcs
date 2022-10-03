@@ -8,7 +8,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from shutil import rmtree
+from shutil import copy, rmtree
 from subprocess import DEVNULL, PIPE, CalledProcessError
 from subprocess import Popen as SPOpen
 from subprocess import run as srun
@@ -842,7 +842,7 @@ class Pull:
 
             of = len(decide)
             with tqdm(desc="resolve", total=of, disable=_disable) as pbar:
-                for index, (hash, patch) in enumerate(OrderedDict(decide).items()):
+                for hash, patch in OrderedDict(decide).items():
                     if key == "a":
                         patch.pull = True
                         self.pull_depends(hash)
@@ -865,19 +865,28 @@ def main():
 def clone(source, destination, verbose):
     """Locally clone a tracking repository to get a working-repository."""
     setup(False, verbose=verbose)
-    destination = Path(destination)
-    if destination.exists():
-        raise ClickException(f"Destination `{destination}` may not exist")
-    git_clone(source, destination)
-    darcs_dest = Path(destination, _uuid)
-    repo_source = Path(darcs_dest, "_darcs")
-    darcs_clone(source, darcs_dest)
-    repo_source = Path(darcs_dest, "_darcs")
-    repo_dest = Path(destination, "_darcs")
-    repo_source.rename(repo_dest)
-    rmtree(darcs_dest, ignore_errors=True)
-    os.chdir(destination)
-    relink()
+    with tqdm(desc="clone", total=5, disable=_disable) as pbar:
+        destination = Path(destination)
+        if destination.exists():
+            raise ClickException(f"Destination `{destination}` may not exist")
+        git_clone(source, destination)
+        pbar.update()
+        dest = Path(destination, ".git", "config")
+        dest.unlink()
+        copy(Path(source, ".git", "config"), dest)
+        pbar.update()
+        darcs_dest = Path(destination, _uuid)
+        repo_source = Path(darcs_dest, "_darcs")
+        darcs_clone(source, darcs_dest)
+        pbar.update()
+        repo_source = Path(darcs_dest, "_darcs")
+        repo_dest = Path(destination, "_darcs")
+        repo_source.rename(repo_dest)
+        rmtree(darcs_dest, ignore_errors=True)
+        pbar.update()
+        os.chdir(destination)
+        relink()
+        pbar.update()
 
 
 @main.command()
