@@ -57,20 +57,8 @@ For darcs beginners
   definition of boring by default
 
 Darcs does not handle `chmod` or symbolic links. The easiest way to work around
-this is by letting `git` do the work. I have two git/darcs repositories for each
-project:
-
-* `project` (the repository I work in) containing a `.git` and a `_darcs` folder
-* `project-tracking` (the repository that tracks changes from upstrream,
-   also containing a `.git` and a `_darcs` folder
-
-I then pull new darcs-patches from `project-tracking` into `project`. Once my
-the changes are in upstream, I obliterate everything to the checkpoint (tag) I
-started with and pull the patches (now via `git`) from `project-tracking`. Or I
-remove `project` and clone it again from `project-tracking`.
-
-Since I always make git-commits from the darcs-patches `git` will track `chmod`
-and symbolic-links for me.
+this is by letting `git` do the work. Since I always make git-commits from the
+darcs-patches `git` will track `chmod` and symbolic-links for me.
 
 Usage
 -----
