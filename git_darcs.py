@@ -869,7 +869,7 @@ def main():
 @click.argument("destination", type=click.Path(exists=False))
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
 def clone(source, destination, verbose):
-    """Locally clone a tracking repository to get a working-repository."""
+    """Locally clone a tracking-repository to get a working-repository."""
     setup(False, verbose=verbose)
     with tqdm(desc="clone", total=5, disable=_disable) as pbar:
         destination = Path(destination)
@@ -942,9 +942,9 @@ def update(verbose, warn, base, shallow):
 @click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
 @click.argument("darcs", nargs=-1)
 def pull(verbose, all, warn, source, darcs):
-    """Pull from source darcs-repository into a tracking repository.
+    """Pull from source darcs-repository into a tracking-repository.
 
-    A tracking repository is created by `git darcs update` and contains a git- and a
+    A tracking-repository is created by `git darcs update` and contains a git- and a
     darcs-repository. Arguments after `--` are passed to `darcs pull`.
     """
     setup(warn, verbose=verbose)
