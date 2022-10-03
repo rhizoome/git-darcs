@@ -1,8 +1,10 @@
 """Incremental import of git into darcs."""
 
+
 import os
 import sys
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -39,7 +41,11 @@ i: don't pull remaining patches
 l: show full log message
 f: show full patch
 
+?: help
+h: help
+
 c: cancel without pulling
+q: cancel without pulling
 """
 
 _boring = """
@@ -48,6 +54,8 @@ _boring = """
 # darcs
 (^|/)_darcs($|/)
 """
+
+_gitignore = "/_darcs"
 
 
 def handle_shutdown():
@@ -60,11 +68,19 @@ def handle_shutdown():
     _shutdown = True
 
 
+def args_print(args):
+    if _verbose:
+        args = [str(x) for x in args]
+        args = " ".join(args)
+        print(f"\n$ {args}")
+
+
 class Popen(SPOpen):
     """Inject defaults into Popen."""
 
     def __init__(self, *args, stderr=None, stdin=None, **kwargs):
         """Inject default into Popen."""
+        args_print(args[0])
         if not stderr:
             stderr = _devnull
         if not stdin and "input" not in kwargs:
@@ -74,6 +90,7 @@ class Popen(SPOpen):
 
 def run(*args, stdout=None, stderr=None, stdin=None, **kwargs):
     """Inject defaults into run."""
+    args_print(args[0])
     if not stdout:
         stdout = _devnull
     if not stderr:
@@ -81,6 +98,15 @@ def run(*args, stdout=None, stderr=None, stdin=None, **kwargs):
     if not stdin and "input" not in kwargs:
         stdin = _devnull
     return srun(*args, stdout=stdout, stderr=stderr, stdin=stdin, **kwargs)
+
+
+def hasnew():
+    """Revert recorded changes in darcs."""
+    try:
+        run(["darcs", "whatsnew"], check=True)
+    except CalledProcessError:
+        return False
+    return True
 
 
 def revert():
@@ -111,14 +137,14 @@ def move(orig, new):
     if (porig.is_file() or porig.is_dir()) and not porig.is_symlink():
         dir = Path(new).parent
         dir.mkdir(parents=True, exist_ok=True)
-        add(dir)
+        darcs_add(dir)
         run(
             ["darcs", "move", "--case-ok", "--reserved-ok", orig, new],
             check=True,
         )
 
 
-def add(path):
+def darcs_add(path):
     """Add a path to the darcs-repo."""
     try:
         run(
@@ -178,6 +204,32 @@ def show_full_patch(source, patch):
         input=b"y",
         check=True,
     )
+
+
+def pull_patch(source, hash):
+    """Pull a darcs-patch."""
+    run(
+        [
+            "darcs",
+            "pull",
+            "--no-interactive",
+            "--no-set-default",
+            source,
+            "-h",
+            hash,
+        ],
+        check=True,
+    )
+
+
+def git_add():
+    """Add changes to git."""
+    run(["git", "add", "."], check=True)
+
+
+def git_commit(message):
+    """Git commit."""
+    run(["git", "commit", "--allow-empty", "-m", message], check=True)
 
 
 def git_clone(source, destination):
@@ -468,6 +520,25 @@ def less_boring():
     disable.rename(bfile)
 
 
+@contextmanager
+def ignore_darcs():
+    """Replace .gitignore with one that ignores `_darcs`."""
+    bfile = Path(".gitignore")
+    old = None
+    if bfile.exists():
+        with bfile.open("rb") as f:
+            old = f.read()
+        bfile.unlink()
+
+    with bfile.open("w", encoding="UTF-8") as f:
+        f.write(_gitignore)
+    yield
+    bfile.unlink()
+    if old:
+        with bfile.open("wb") as f:
+            f.write(old)
+
+
 def transfer(gen, count, *, last=None):
     """Transfer the git-commits to darcs."""
     try:
@@ -638,7 +709,7 @@ class Patch:
         """Get a short description of the patch."""
         return f"""
 {self.chash}
-From: {self.author}
+Author: {self.author}
 Date: {self.date}
 Subject: {self.subject}
         """.strip()
@@ -654,7 +725,10 @@ Subject: {self.subject}
         """Show the full patch."""
         show_full_patch(self.source, self.hash)
 
-    def ask(self):
+    def message(self):
+        return f"{self.subject}\n\n{self.comment}".strip()
+
+    def ask(self, index, of):
         """Ask if I should pull this patch."""
         key = "l"
         text = self.short()
@@ -663,7 +737,7 @@ Subject: {self.subject}
                 _pull_question,
                 "ynwasc",
                 text=text,
-                state=f"{self.index + 1}/{self.of}",
+                state=f"{index + 1}/{of}",
                 help=_pull_help,
             )
             text = ""
@@ -689,41 +763,67 @@ class Pull:
         """Dear flake8 this is a init function."""
         self.source = source
         self.args = args
-        self.patches = get_patches(source, args)
+        self.patches_xml = get_patches(source, args)
+        self.patches = OrderedDict()  # Legacy support
+        of = len(self.patches_xml)
+        for index, patch in enumerate(self.patches_xml):
+            obj = Patch(source, patch, index=index, of=of)
+            self.patches[obj.hash] = obj
 
     def pull(self):
         """Pull patches."""
-        decide = list(self.patches)
-        pull = []
+        self.decide()
+        pull = [x for x in self.patches.values() if x.pull]
+        count = len(pull)
+        with tqdm(desc="pull", total=count, disable=_disable) as pbar:
+            for patch in pull:
+                pull_patch(self.source, patch.hash)
+                with ignore_darcs():
+                    git_add()
+                git_commit(patch.message())
+                pbar.update()
+
+    def pull_depends(self, hash):
+        """Find dependent patches an set pull to True for these, too."""
+        xml = get_patches(self.source, ["-h", hash])
+        count = 0
+        for patch in xml:
+            hash = patch.attrib["hash"]
+            patch = self.patches[hash]
+            if not patch.pull:
+                count += 1
+                patch.pull = True
+        if count:
+            print(f"Select {count} dependent patches")
+
+    def decide(self):
+        """Decide patches to pull."""
+        decide = OrderedDict(self.patches)
         while decide:
+            key = None
             of = len(decide)
-            key = ""
-            for index, xml in enumerate(list(decide)):
-                if key == "i":
-                    patch = self.pull_patch(xml, False)
-                elif key == "a":
-                    patch = self.pull_patch(xml, True)
-                else:
-                    patch, key = self.ask_patch(xml, index, of)
-                if patch.pull is not None:
-                    decide.remove(xml)
-                    if patch.pull:
-                        pull.append(patch)
-                if key == "c":
-                    print("\nCancel pull")
-                    sys.exit(1)
-
-    def pull_patch(self, patch, pull):
-        """Pull a single patch."""
-        patch = Patch(self.source, patch)
-        patch.pull = pull
-        return patch
-
-    def ask_patch(self, patch, index, of):
-        """Ask to pull a single patch."""
-        patch = Patch(self.source, patch, index=index, of=of)
-        key = patch.ask()
-        return patch, key
+            with tqdm(desc="resolve", total=of, disable=_disable) as pbar:
+                pbar.disable = True
+                for index, (hash, patch) in enumerate(OrderedDict(decide).items()):
+                    if key == "i":
+                        pbar.disable = _disable
+                        patch.pull = False
+                    elif key == "a":
+                        pbar.disable = _disable
+                        patch.pull = True
+                    elif patch.pull is None:
+                        key = patch.ask(index, of)
+                    if patch.pull is not None:
+                        if patch.pull:
+                            self.pull_depends(hash)
+                        decide.pop(hash)
+                    if key == "c":
+                        print("Cancel pull")
+                        sys.exit(1)
+                    elif key == "q":
+                        print("Cancel pull")
+                        sys.exit(1)
+                    pbar.update()
 
 
 @click.group()
@@ -786,16 +886,30 @@ def update(verbose, warn, base, shallow):
 
 @main.command()
 @click.option("-v/-nv", "--verbose/--no-verbose", default=False)
+@click.option(
+    "-w/-nw",
+    "--warn/--no-warn",
+    default=True,
+    help="Warn that repository will be cleared",
+)
 @click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
 @click.argument("darcs", nargs=-1)
-def pull(verbose, source, darcs):
+def pull(verbose, warn, source, darcs):
     """Pull from source darcs-repository into a tracking repository.
 
     A tracking repository is created by `git darcs update` and contains a git- and a
     darcs-repository. Arguments after `--` are passed to `darcs pull`.
     """
-    init()
-    setup(False, verbose=verbose)
+    setup(warn, verbose=verbose)
     if not Path("_darcs").exists():
         raise ClickException("Please run git-darcs in the root of your darcs-repo.")
+    if not Path(".git").exists():
+        raise ClickException("Please run git-darcs in the root of your git-repo.")
+    wipe()
+    if hasnew():
+        raise ClickException(
+            "The git and the darcs repo in your tracking-repo are not in sync."
+        )
+
+    init()
     Pull(source, list(darcs)).pull()
