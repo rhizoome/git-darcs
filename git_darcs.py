@@ -687,7 +687,7 @@ def ask(question, choice, *, text="", state="", help=""):
         sys.stdout.write(f"{question}? {state}  [{choice}], or ? for more options: ")
         sys.stdout.flush()
         key = readkey()
-        print()
+        print(key)
         if key in ("h", "?"):
             print(help)
     return key

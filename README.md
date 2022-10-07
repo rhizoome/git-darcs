@@ -173,7 +173,7 @@ patch ef1f2894abd21d0deef19090d4b873bf62af890a
 Author: Jean-Louis Fuchs <email>
 Date: 2022-10-07 15:55:22
 Subject: a new feature
-Shall I pull this patch? 1/1  [ynwasc], or ? for more options:
+Shall I pull this patch? 1/1  [ynwasc], or ? for more options: ?
 
 y: pull this patch
 n: don't pull it
@@ -191,9 +191,9 @@ h: help
 c: cancel without pulling
 q: cancel without pulling
 
-Shall I pull this patch? 1/1  [ynwasc], or ? for more options:
+Shall I pull this patch? 1/1  [ynwasc], or ? for more options: y
 resolve: 0it [00:00, ?it/s]
-Shall I pull 1 patches?   [yn], or ? for more options:
+Shall I pull 1 patches?   [yn], or ? for more options: y
 pull: 100%|█████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.58it/s]
 ```
 
