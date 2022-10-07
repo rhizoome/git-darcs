@@ -1,5 +1,5 @@
-git-darcs -  Incremental import of git into darcs and back again
-================================================================
+Incremental import of git into darcs and back again
+====================================================
 
 [![Test](https://github.com/ganwell/git-darcs/actions/workflows/test.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/test.yml) [![CodeQL](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ganwell/git-darcs/actions/workflows/codeql-analysis.yml)
 
@@ -23,7 +23,7 @@ git-darcs -  Incremental import of git into darcs and back again
 git-darcs needs a repository only for tracking. Don't use your working
 git-repository. git-darcs will clear all your work that is not commited. It also
 needs to temporarily change `.gitignore` and `_darcs/pref/boring`. By default it
-will warn about this. You can add `-nw` do avoid the warning. The tutorial never
+will warn about this. You can add `-nw` to avoid the warning. The tutorial never
 contains a `-nw`, so people don't copy-paste from the tutorial and lose their
 work.
 
@@ -115,7 +115,7 @@ Fast-forward
 
 From now on git-darcs will import every commit, but it will linearize the
 history, so the history might look different than in git, but no change will be
-forgotten. (See Linearized History)
+forgotten. (See [Linearized History](#linearized-history))
 
 ```bash
 $> git darcs update
@@ -212,9 +212,8 @@ new file mode 100644
 index 0000000..e69de29
 ```
 
-If you pull into dms-track instead you have to use obliterate patches and keep
-git and darcs in sync. So lets remove `dms-stage` until the next
-merge-request...
+If you pull into dms-track instead, you have to obliterate patches and keep git
+and darcs in sync. So lets remove `dms-stage` until the next merge-request...
 
 ```bash
 $> cd ..
