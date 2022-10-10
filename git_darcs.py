@@ -696,11 +696,9 @@ def ask(question, choice, *, text="", state="", help=""):
 class Patch:
     """Represents a darcs-patch."""
 
-    def __init__(self, source, patch, *, index=None, of=None):
+    def __init__(self, source, patch):
         """Dear flake8 this is a init function."""
         self.source = source
-        self.index = index
-        self.of = of
         self.patch = patch
         fields = patch.attrib
         self.author = fields["author"]
@@ -768,20 +766,24 @@ Subject: {self.subject}
 class Pull:
     """Contains state for the pull-questions."""
 
-    def __init__(self, source, args):
+    def __init__(self, source, args, *, ignore_temp=True):
         """Dear flake8 this is a init function."""
         self.source = source
         self.args = args
+        self.ignore_temp = ignore_temp
         self.patches_xml = get_patches(source, args)
         self.patches = OrderedDict()  # Legacy support
-        self.of = of = len(self.patches_xml)
-        for index, patch in enumerate(self.patches_xml):
-            obj = Patch(source, patch, index=index, of=of)
-            self.patches[obj.hash] = obj
+        for patch in self.patches_xml:
+            obj = Patch(source, patch)
+            if self.ignore_temp:
+                if not obj.subject.startswith("temp: "):
+                    self.patches[obj.hash] = obj
+            else:
+                self.patches[obj.hash] = obj
 
     def pull(self, all=False):
         """Pull patches."""
-        if not self.of:
+        if not self.patches:
             print("No remote patches to pull in!")
             return
         if all:
@@ -939,9 +941,15 @@ def update(verbose, warn, base, shallow):
     default=False,
     help="Pull all patches",
 )
+@click.option(
+    "-i/-ni",
+    "--ignore-temp/--no-ignore-temp",
+    default=True,
+    help="Ignore temporary patches (with 'temp: ')",
+)
 @click.argument("source", type=click.Path(exists=True, dir_okay=True, file_okay=False))
 @click.argument("darcs", nargs=-1)
-def pull(verbose, all, warn, source, darcs):
+def pull(verbose, all, warn, source, darcs, ignore_temp):
     """Pull from source darcs-repository into a tracking-repository.
 
     A tracking-repository is created by `git darcs update` and contains a git- and a
@@ -959,4 +967,4 @@ def pull(verbose, all, warn, source, darcs):
         )
 
     init()
-    Pull(source, list(darcs)).pull(all)
+    Pull(source, list(darcs), ignore_temp=ignore_temp).pull(all)

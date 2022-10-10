@@ -385,5 +385,7 @@ Options:
   -v, --verbose / -nv, --no-verbose
   -w, --warn / -nw, --no-warn     Warn that repository will be cleared
   -a, --all / -na, --no-all       Pull all patches
+  -i, --ignore-temp / -ni, --no-ignore-temp
+                                  Ignore temporary patches (with 'temp: ')
   --help                          Show this message and exit.
 ```
