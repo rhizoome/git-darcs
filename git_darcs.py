@@ -706,9 +706,10 @@ class Patch:
         self.chash = Fore.CYAN + f"patch {self.hash}" + Style.RESET_ALL
         self.date = datetime.strptime(fields["date"], _darcs_date)
         self.subject = patch.find("name").text
-        self.comment = patch.find("comment").text
-        if self.comment.startswith("Ignore-this: "):
-            self.comment = ""
+        comment = patch.find("comment").text
+        if comment.startswith("Ignore-this: "):
+            comment = os.linesep.join(comment.splitlines()[1:])
+        self.comment = comment.strip()
         self.pull = None
 
     def short(self):
