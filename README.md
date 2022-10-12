@@ -68,7 +68,7 @@ Date:   Fri Oct  7 17:40:10 CEST 2022
   * d3ce714 chore(release): v5.0.0
 ```
 
-Create the work-repository. Note that git and darcs make sure that no history-
+Create the work-repository. Note that git and darcs make sure that no historical
 data is duplicated on disk (using hardlinks).
 
 ```bash
@@ -99,7 +99,7 @@ darcs show dependencies | dot -Tpdf -Grankdir=TB -o $ftmp
 
 ![first record](https://github.com/ganwell/git-darcs/blob/main/_static/first.png?raw=true)
 
-There are new changes on upstream, lets pull them in.
+There are new changes on upstream, let's pull them in.
 
 ```bash
 $> cd ../dms-track/
@@ -113,8 +113,8 @@ Fast-forward
  18 files changed, 262 insertions(+), 67 deletions(-)
 ```
 
-From now on git-darcs will import every commit, but it will linearize the
-history, so the history might look different than in git, but no change will be
+From now on git-darcs will import every commit, but with a linearized
+history. That means the history might look different than in git, but no change will be
 forgotten. (See [Linearized History](#linearized-history))
 
 ```bash
@@ -154,7 +154,7 @@ Date:   Fri Oct  7 17:55:22 CEST 2022
 ```
 
 We can now either pull the `a new feature`-patch into `dms-track` or we can
-create a temporary `dms-stage` so it is easier to cleanup after the
+create a temporary `dms-stage` so it is easier to clean up after the
 merge-request has been accepted. Note `git-darcs clone` will copy git-remotes
 from the source, so you can push into your fork if it is set up.
 
@@ -165,7 +165,7 @@ clone: 100%|██████████████████████�
 $> cd dms-stage
 ```
 
-For `git-darcs pull` I tried to emulate `darcs pull`
+`git-darcs pull` tries to emulate `darcs pull`.
 
 ```bash
 $> git darcs pull ../dms-work/
@@ -212,7 +212,7 @@ new file mode 100644
 index 0000000..e69de29
 ```
 
-If you pull into dms-track instead, you have to obliterate patches and keep git
+If you pull into `dms-track` instead, you have to obliterate patches and keep git
 and darcs in sync. So lets remove `dms-stage` until the next merge-request...
 
 ```bash
@@ -248,18 +248,18 @@ Performance
 -----------
 
 git-darcs will playback the history of the git-repository. Every commit that is
-recorded, will be checked out in git and then recorded in darcs. For that reason
+recorded will first be checked out in git and then recorded in darcs. For that reason
 git-darcs lazily imports the latest commit by default. This is how it is meant
 to be used: Using darcs to complement git. You can use it to convert
 repositories, if you like the way non-linear history is handled, it will be
 sloooow. See also `darcs convert import`.
 
-chmod and symbolic-links
+chmod and symbolic links
 ------------------------
 
-Darcs does not handle `chmod` or symbolic-links. The easiest way to work around
-this, is letting `git` do the work. Since I always make git-commits from the
-darcs-patches `git` will track `chmod` and symbolic-links for me.
+Darcs does not handle `chmod` or symbolic links. The easiest way to work around
+this isby  letting `git` do the work. Since I always make git-commits from the
+darcs-patches `git` will track `chmod` and symbolic links for me.
 
 Linearized History
 ------------------
