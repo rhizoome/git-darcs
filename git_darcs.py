@@ -796,13 +796,7 @@ class Pull:
         count = len(pull)
         if not all:
             key = ask(f"Shall I pull {count} patches", "yn")
-            if key == "n":
-                print("Cancel pull")
-                sys.exit(1)
-            if key == "q":
-                print("Cancel pull")
-                sys.exit(1)
-            if key == "c":
+            if key in ("n", "q", "c"):
                 print("Cancel pull")
                 sys.exit(1)
         with tqdm(desc="pull", total=count, disable=_disable) as pbar:
@@ -842,10 +836,7 @@ class Pull:
                     break
                 elif key == "i":
                     break
-                elif key == "c":
-                    print("Cancel pull")
-                    sys.exit(1)
-                elif key == "q":
+                elif key in ("c", "q"):
                     print("Cancel pull")
                     sys.exit(1)
 
