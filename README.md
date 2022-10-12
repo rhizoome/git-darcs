@@ -258,7 +258,7 @@ chmod and symbolic links
 ------------------------
 
 Darcs does not handle `chmod` or symbolic links. The easiest way to work around
-this isby  letting `git` do the work. Since I always make git-commits from the
+this is by  letting `git` do the work. Since I always make git-commits from the
 darcs-patches `git` will track `chmod` and symbolic links for me.
 
 Linearized History
