@@ -15,8 +15,6 @@ Incremental import of git into darcs and back again
   * [Linearized History](#linearized-history)
 - [Usage](#usage)
 
-![demo](https://github.com/ganwell/git-darcs/blob/main/demo.gif?raw=true)
-
 ⚠ Warning
 =========
 
@@ -29,6 +27,8 @@ work.
 
 The tool is made for developers, while error-handling is okayish, there is
 almost no error-reporting, you'll have to read the traceback.
+
+![demo](https://github.com/ganwell/git-darcs/blob/main/demo.gif?raw=true)
 
 Tutorial
 ========
