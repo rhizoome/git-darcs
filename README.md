@@ -158,6 +158,10 @@ create a temporary `dms-stage` so it is easier to clean up after the
 merge-request has been accepted. Note `git-darcs clone` will copy git-remotes
 from the source, so you can push into your fork if it is set up.
 
+If you pull into `dms-track` instead, you have to remove patches or commits on
+both darcs and git, keeping darcs and git manually in sync.
+
+
 ```bash
 $> cd ..
 $> git darcs clone dms-track/ dms-stage
@@ -211,9 +215,6 @@ diff --git a/document_merge_service/feature.py b/document_merge_service/feature.
 new file mode 100644
 index 0000000..e69de29
 ```
-
-If you pull into `dms-track` instead, you have to obliterate patches and keep git
-and darcs in sync. So lets remove `dms-stage` until the next merge-request...
 
 ```bash
 $> cd ..
