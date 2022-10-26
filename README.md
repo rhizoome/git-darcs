@@ -341,7 +341,8 @@ Options:
 
 Commands:
   clone   Locally clone a tracking-repository to get a working-repository.
-  update  Incremental import o git into darcs.
+  pull    Pull from source darcs-repository into a tracking-repository.
+  update  Incremental import of git into darcs.
 ```
 
 ```
