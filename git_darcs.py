@@ -13,6 +13,7 @@ from subprocess import DEVNULL, PIPE, CalledProcessError
 from subprocess import Popen as SPOpen
 from subprocess import run as srun
 from threading import Thread
+from time import sleep
 
 import click
 from click import ClickException
@@ -20,6 +21,7 @@ from colorama import Fore, Style, init
 from readchar import readkey
 from tqdm import tqdm
 
+_large = False
 _uuid = "_b531990e-3187-4b52-be1f-6e4d4d1e40c9"
 _darcs_comment = Path("_darcs", _uuid)
 _env_comment = {"EDITOR": f"mv {_darcs_comment}", "VISUAL": f"mv {_darcs_comment}"}
@@ -258,6 +260,8 @@ def wipe():
 
 def checkout(rev):
     """Checkout a git-commit."""
+    if _large:
+        sleep(0.01)  # Make sure timestamps differ
     run(
         ["git", "checkout", rev],
         check=True,
@@ -355,13 +359,19 @@ def record_all(rev, *, last=None, postfix=None, comments=None):
     try:
         env = dict(os.environ)
         env.update(_env_comment)
+        if _large:
+            ignore_times = []
+        else:
+            ignore_times = ["--ignore-times"]
         res = run(
             [
                 "darcs",
                 "record",
                 "--look-for-adds",
                 "--no-interactive",
-                "--ignore-times",
+            ]
+            + ignore_times
+            + [
                 "--edit-long-comment",
                 "--author",
                 by,
@@ -909,12 +919,20 @@ def clone(source, destination, verbose):
     default=None,
     help="On first update only import current commit",
 )
-def update(verbose, warn, base, shallow):
+@click.option(
+    "-l/-nl",
+    "--large/--no-large",
+    default=False,
+    help="Large repo mode, darcs might miss changes, but import is faster",
+)
+def update(verbose, warn, base, shallow, large):
     """Incremental import of git into darcs.
 
     By default it imports a shallow copy (the current commit). Use `--no-shallow`
     to import the complete history.
     """
+    global _large
+    _large = large
     setup(warn, verbose=verbose)
     run_update(*prepare_update(base, shallow))
 
