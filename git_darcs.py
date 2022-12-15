@@ -512,7 +512,6 @@ def checkpoint(rev):
     """Tag/checkpoint the current git-commit."""
     date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
     tag(f"git-checkpoint {date} {rev}")
-    optimize()
 
 
 def warning():
@@ -603,6 +602,7 @@ def import_range(rbase, *, from_checkpoint=False):
                 record_all(rhead)
         finally:
             checkpoint(rhead)
+            optimize()
 
 
 def import_one():
@@ -612,6 +612,7 @@ def import_one():
     checkout(head)
     record_all(head)
     checkpoint(head)
+    optimize()
 
 
 def fix_pwd():
