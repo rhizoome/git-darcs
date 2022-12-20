@@ -6,6 +6,10 @@ Incremental import of git into darcs and back again
 [git-darcs on pypi](https://pypi.org/project/git-darcs/)
 
 - [Warning](#-warning)
+- [Install](#Install)
+- [Use-cases](#use-cases)
+  * [Main use-case](#main-use-case)
+  * [Other use-case](#other-use-case)
 - [Tutorial](#Tutorial)
 - [But why?](#but-why)
 - [For darcs beginners](#for-darcs-beginners)
@@ -30,8 +34,43 @@ almost no error-reporting, you'll have to read the traceback.
 
 ![demo](https://github.com/ganwell/git-darcs/blob/main/demo.gif?raw=true)
 
+Install
+=======
+
+Integration tests run on python 3.7 - 3.11.
+
+```bash
+pip install git-darcs
+```
+
+Use-cases
+=========
+
+Main use-case
+-------------
+
+Use the excellent capabilities of darcs to craft consistent, clear and concise
+patches while the remote repository still remains git. Thats the situation most
+of us in are because at work we have to use git.
+
+Other use-cases
+---------------
+
+* Convert a git repository to darcs using the [linearized history](#linearized-history)
+  proposed by git-darcs
+* Visualize a git-repository using `darcs show dependencies`
+
 Tutorial
 ========
+
+The tutorial covers the main use-case:
+
+1. Check-out a git-repo, because at work you have to use git
+2. Snapshot the latest commit into darcs
+3. Craft patches: Use the excellent capabilities of darcs to move code between
+   patches to create very consistent and clean patches
+4. Use `git darcs pull` to bring the darcs-patches back into git and
+   create pull-request
 
 Clone your tracking-repository.
 
