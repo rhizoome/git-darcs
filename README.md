@@ -10,8 +10,8 @@ Incremental import of git into darcs and back again
 - [Use-cases](#use-cases)
   * [Main use-case](#main-use-case)
   * [Other use-case](#other-use-case)
+  * [But why?](#but-why)
 - [Tutorial](#Tutorial)
-- [But why?](#but-why)
 - [For darcs beginners](#for-darcs-beginners)
 - [Caveats](#caveats)
   * [Performance](#performance)
@@ -59,6 +59,16 @@ Other use-cases
 * Convert a git repository to darcs using the [linearized history](#linearized-history)
   proposed by git-darcs
 * Visualize a git-repository using `darcs show dependencies`
+
+But why?
+--------
+
+I prefer to group changes by topic, so I am constantly amending commits/patches.
+This is very easy in darcs and more complicated in git. Yes, I know about
+`--fixup` and `--autosquash` in git. Also I can find independent low-risk
+patches easily with `darcs show dependencies`, so I can constantly make MRs.
+Making the final _breaking_ change/MR much smaller. This is less tedious for the
+reviewers.
 
 Tutorial
 ========
@@ -259,16 +269,6 @@ index 0000000..e69de29
 $> cd ..
 $> rm -r dms-stage
 ```
-
-But why?
-========
-
-I prefer to group changes by topic, so I am constantly amending commits/patches.
-This is very easy in darcs and more complicated in git. Yes, I know about
-`--fixup` and `--autosquash` in git. Also I can find independent low-risk
-patches easily with `darcs show dependencies`, so I can constantly make MRs.
-Making the final _breaking_ change/MR much smaller. This is less tedious for the
-reviewers.
 
 For darcs beginners
 ===================
