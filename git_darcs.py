@@ -405,7 +405,20 @@ def get_rev_list(head, base):
     ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
-
+        else:
+            with Popen(
+                [
+                    "git",
+                    "rev-list",
+                    "--reverse",
+                    "--topo-order",
+                    "--ancestry-path",
+                    f"{base}..{head}",
+                ],
+                stdout=PIPE,
+            ) as res:
+                while line := res.stdout.readline():
+                    yield line.decode("UTF-8").strip()
 
 def get_base():
     """Get the root/base commit from git."""
