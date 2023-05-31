@@ -592,6 +592,26 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
 
 [[package]]
+name = "python-lsp-black"
+version = "1.3.0"
+description = "Black plugin for the Python LSP Server"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-lsp-black-1.3.0.tar.gz", hash = "sha256:5aa257e9e7b7e5a2316ef2a9fbcd242e82e0f695bf1622e31c0bf5cd69e6113f"},
+    {file = "python_lsp_black-1.3.0-py3-none-any.whl", hash = "sha256:5f583b4395d8d048885974095088ab81e36e501de369cc49a621a82473bb9070"},
+]
+
+[package.dependencies]
+black = ">=22.3.0"
+python-lsp-server = ">=1.4.0"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["flake8", "isort (>=5.0)", "mypy", "pre-commit", "pytest", "types-pkg-resources", "types-setuptools"]
+
+[[package]]
 name = "python-lsp-jsonrpc"
 version = "1.0.0"
 description = "JSON RPC 2.0 server library"
@@ -833,4 +853,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "ce21fe6965425893309caece7d94287c9c810c4b3da6b66788b06ee37b870239"
+content-hash = "df221820e314dcf045b8a5279c28f0d7f894e6460ab49fc781863e6c7f527134"
