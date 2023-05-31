@@ -270,6 +270,9 @@ def checkout(rev):
 
 def is_ancestor(rev, last):
     """Check if revisiion can fast-forward."""
+    # I don't know why git thinks revs are their own ancestor
+    if rev == last:
+        return False
     try:
         run(["git", "merge-base", "--is-ancestor", last, rev], check=True)
         return True
