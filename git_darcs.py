@@ -349,6 +349,7 @@ def get_head():
 
 def record_all(rev, *, last=None, postfix=None, comments=None):
     """Record all change onto the darcs-repo."""
+    assert rev != last
     msgs = onelines(rev, last=last)
     msg = msgs[0]
     comments = "\n".join(msgs[1:])
@@ -422,6 +423,7 @@ def get_rev_list(head, base):
             ) as res:
                 while line := res.stdout.readline():
                     yield line.decode("UTF-8").strip()
+
 
 def get_base():
     """Get the root/base commit from git."""
