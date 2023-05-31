@@ -306,22 +306,20 @@ def author(rev):
     return msg
 
 
-def onelines(rev, *, last=None):
+def onelines(rev, *, last=None, merges=False):
     """Get the short-message of a commit from git."""
     if last:
-        res = run(
-            [
-                "git",
-                "log",
-                "--oneline",
-                "--no-decorate",
-                "--date-order",
-                "--no-merges",
-                f"{last}..{rev}",
-            ],
-            stdout=PIPE,
-            check=True,
-        )
+        cmd = [
+            "git",
+            "log",
+            "--oneline",
+            "--no-decorate",
+            "--date-order",
+        ]
+        if merges:
+            cmd += ["--no-merges"]
+        cmd += (f"{last}..{rev}",)
+        res = run(cmd, stdout=PIPE, check=True)
     else:
         res = run(
             ["git", "log", "--oneline", "--no-decorate", "--max-count=1", rev],
@@ -350,7 +348,9 @@ def get_head():
 def record_all(rev, *, last=None, postfix=None, comments=None):
     """Record all change onto the darcs-repo."""
     assert rev != last
-    msgs = onelines(rev, last=last)
+    msgs = onelines(rev, last=last, merges=False)
+    if not msgs:
+        msgs = onelines(rev, last=last, merges=True)
     msg = msgs[0]
     comments = "\n".join(msgs[1:])
     by = author(rev)
@@ -393,32 +393,32 @@ def record_all(rev, *, last=None, postfix=None, comments=None):
             raise
 
 
+def get_rev_list_cmd(head, base, merges=False):
+    """Create the cmd to linearized path from git."""
+    cmd = [
+        "git",
+        "rev-list",
+        "--reverse",
+        "--topo-order",
+        "--ancestry-path",
+    ]
+    if not merges:
+        cmd += ["--no-merges"]
+    cmd += [f"{base}..{head}"]
+    return cmd
+
+
 def get_rev_list(head, base):
     """Get a linearized path from base to head from git."""
     with Popen(
-        [
-            "git",
-            "rev-list",
-            "--reverse",
-            "--topo-order",
-            "--ancestry-path",
-            "--no-merges",
-            f"{base}..{head}",
-        ],
+        get_rev_list_cmd(head, base, merges=False),
         stdout=PIPE,
     ) as res:
         while line := res.stdout.readline():
             yield line.decode("UTF-8").strip()
         else:
             with Popen(
-                [
-                    "git",
-                    "rev-list",
-                    "--reverse",
-                    "--topo-order",
-                    "--ancestry-path",
-                    f"{base}..{head}",
-                ],
+                get_rev_list_cmd(head, base, merges=True),
                 stdout=PIPE,
             ) as res:
                 while line := res.stdout.readline():
