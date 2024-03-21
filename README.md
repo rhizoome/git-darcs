@@ -39,8 +39,8 @@ Install
 
 Integration tests run on python 3.7 - 3.11.
 
-```bash
-pip install git-darcs
+```sh-session
+$ pip install git-darcs
 ```
 
 Use-cases
@@ -84,8 +84,8 @@ The tutorial covers the main use-case:
 
 Clone your tracking-repository.
 
-```bash
-$> git clone https://github.com/adfinis-sygroup/document-merge-service.git dms-track
+```sh-session
+$ git clone https://github.com/adfinis-sygroup/document-merge-service.git dms-track
 Cloning into 'document-merge-service'...
 
 .....
@@ -95,16 +95,16 @@ Resolving deltas: 100% (1267/1267), done.
 
 Lazily import the git-repository to darcs.
 
-```bash
-$> git darcs update
+```sh-session
+$ git darcs update
 Use CTRL-D for a graceful shutdown.
 ```
 
 git-darcs will import the latest commit and tag it, so it can update from there,
 when you pull commits from upstream.
 
-```bash
-$> (cd dms-track; darcs log)
+```sh-session
+$ (cd dms-track; darcs log)
 patch 7997a3365da1022db4b669ea63a37dc3f370a225
 Author: Jean-Louis Fuchs <email>
 Date:   Fri Oct  7 17:40:10 CEST 2022
@@ -120,39 +120,39 @@ Date:   Fri Oct  7 17:40:10 CEST 2022
 Create the work-repository. Note that git and darcs make sure that no historical
 data is duplicated on disk (using hardlinks).
 
-```bash
-$> git darcs clone dms-track/ dms-work
+```sh-session
+$ git darcs clone dms-track/ dms-work
 clone: 100%|████████████████████████████████████████████████| 5/5 [00:00<00:00, 37.75it/s]
 ```
 
 Now you can implement a new feature.
 
-```bash
-$> cd dms-work
-$> touch document_merge_service/feature.py
-$> darcs add document_merge_service/feature.py
+```sh-session
+$ cd dms-work
+$ touch document_merge_service/feature.py
+$ darcs add document_merge_service/feature.py
 Adding './document_merge_service/feature.py'
 Finished adding:
 ./document_merge_service/feature.py
 
-$> darcs record -m "a new feature"
+$ darcs record -m "a new feature"
 addfile ./document_merge_service/feature.py
 Shall I record this change? (1/1)  [ynW...], or ? for more options: y
 Do you want to Record these changes? [Yglqk...], or ? for more options: y
 Finished recording patch 'a new feature'
 ```
 
-```bash
-darcs show dependencies | dot -Tpdf -Grankdir=TB -o $ftmp
+```sh-session
+$ darcs show dependencies | dot -Tpdf -Grankdir=TB -o $ftmp
 ```
 
 ![first record](https://github.com/ganwell/git-darcs/blob/main/_static/first.png?raw=true)
 
 There are new changes on upstream, let's pull them in.
 
-```bash
-$> cd ../dms-track/
-$> git pull
+```sh-session
+$ cd ../dms-track/
+$ git pull
 Updating d3ce714..a6a8e35
 Fast-forward
  .github/workflows/tests.yml                         |  6 ++++-
@@ -166,8 +166,8 @@ From now on git-darcs will import every commit, but with a linearized
 history. That means the history might look different than in git, but no change will be
 forgotten. (See [Linearized History](#linearized-history))
 
-```bash
-$> git darcs update
+```sh-session
+$ git darcs update
 Use CTRL-D for a graceful shutdown.
 commits:
 100%|███████████████████████████████████████████████████████| 18/18 [00:00<00:00, 19.14it/s]
@@ -175,9 +175,9 @@ commits:
 
 We pull the new patches into `dms-work`.
 
-```bash
-$> cd ../dms-track/
-$> darcs pull ../dms-track/
+```sh-session
+$ cd ../dms-track/
+$ darcs pull ../dms-track/
 Pulling from "/home/jeanlf/Temp/dms-track"...
 patch 309682700e7142e37945c45cc3375674012e8050
 Author: GitHub <noreply@github.com>
@@ -189,8 +189,8 @@ Finished pulling.
 
 The 18 patches we pulled are now in `dms-work` along with a new snapshot-tag.
 
-```bash
-$> darcs log --from-tag=.
+```sh-session
+$ darcs log --from-tag=.
 patch 430136524b02be562fdf0f0459594ffa981d386b
 Author: Jean-Louis Fuchs <email>
 Date:   Fri Oct  7 18:07:09 CEST 2022
@@ -211,17 +211,17 @@ If you pull into `dms-track` instead, you have to remove patches or commits on
 both darcs and git, keeping darcs and git manually in sync.
 
 
-```bash
-$> cd ..
-$> git darcs clone dms-track/ dms-stage
+```sh-session
+$ cd ..
+$ git darcs clone dms-track/ dms-stage
 clone: 100%|████████████████████████████████████████████████| 5/5 [00:00<00:00, 48.32it/s]
-$> cd dms-stage
+$ cd dms-stage
 ```
 
 `git-darcs pull` tries to emulate `darcs pull`.
 
-```bash
-$> git darcs pull ../dms-work/
+```sh-session
+$ git darcs pull ../dms-work/
 patch ef1f2894abd21d0deef19090d4b873bf62af890a
 Author: Jean-Louis Fuchs <email>
 Date: 2022-10-07 15:55:22
@@ -252,8 +252,8 @@ pull: 100%|███████████████████████
 
 The patch `a new feature` is now a git-commit.
 
-```bash
-$> git show
+```sh-session
+$ git show
 commit c2541c6c3527d99a7fe69dc43b5863992d919a45 (HEAD -> main)
 Author: Jean-Louis Fuchs <email>
 Date:   Fri Oct 7 20:01:22 2022 +0200
@@ -265,9 +265,9 @@ new file mode 100644
 index 0000000..e69de29
 ```
 
-```bash
-$> cd ..
-$> rm -r dms-stage
+```sh-session
+$ cd ..
+$ rm -r dms-stage
 ```
 
 For darcs beginners
@@ -314,8 +314,8 @@ parallel branch.
 
 This git-log
 
-```
-$> git log --oneline --graph
+```sh-session
+$ git log --oneline --graph
 * eef24d8 (HEAD -> master) end > end0
 * 841c900 end
 *   969ad57 Merge branch 'b'
@@ -337,7 +337,7 @@ $> git log --oneline --graph
 
 becomes this darcs-log
 
-```
+```sh-session
 * eef24d8 end > end0
     move ./end ./end0
 * 841c900 end
@@ -369,8 +369,8 @@ See how `0d94733 Merge branch 'a'` also contains `d26d325` and `0d94733`.
 Usage
 =====
 
-```
-$> git-darcs --help
+```sh-session
+$ git-darcs --help
 Usage: git-darcs [OPTIONS] COMMAND [ARGS]...
 
   Click entrypoint.
@@ -384,8 +384,8 @@ Commands:
   update  Incremental import of git into darcs.
 ```
 
-```
-$> git-darcs update --help
+```sh-session
+$ git-darcs update --help
 Usage: git-darcs update [OPTIONS]
 
   Incremental import of git into darcs.
@@ -402,8 +402,8 @@ Options:
   --help                          Show this message and exit.
 ```
 
-```
-$> git-darcs clone --help
+```sh-session
+$ git-darcs clone --help
 Usage: git-darcs clone [OPTIONS] SOURCE DESTINATION
 
   Locally clone a tracking-repository to get a working-repository.
@@ -413,8 +413,8 @@ Options:
   --help                          Show this message and exit.
 ```
 
-```
-$> git-darcs pull --help
+```sh-session
+$ git-darcs pull --help
 Usage: git-darcs pull [OPTIONS] SOURCE [DARCS]...
 
   Pull from source darcs-repository into a tracking-repository.
