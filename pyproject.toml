@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "git-darcs"
-version = "0.9.1"
+version = "0.10.0"
 description = " Incremental import of git into darcs and back again"
-authors = ["Jean-Louis Fuchs <jean-louis.fuchs@adfinis.com>"]
+authors = ["Jean-Louis Fuchs <safe.pen2857@rhizoome.ch>"]
 license = "AGPL-3.0-or-later"
 homepage = "https://github.com/ganwell/git-darcs"
 repository = "https://github.com/ganwell/git-darcs"
@@ -22,7 +22,7 @@ include = [
 git-darcs = 'git_darcs:main'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.12"
 tqdm = "^4.64.0"
 click = "^8.1.3"
 readchar = "^4.0.3"
