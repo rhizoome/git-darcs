@@ -1,6 +1,5 @@
 """Incremental import of git into darcs."""
 
-
 import os
 import sys
 import xml.etree.ElementTree as ET
